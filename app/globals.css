@@ -90,15 +90,15 @@
   scrollbar-width: none;
 }
 
-/* Coral glow utility */
-.glow-coral {
-  text-shadow: 0 0 20px rgba(255, 107, 107, 0.4), 0 0 40px rgba(255, 107, 107, 0.15);
+/* Glow utilities */
+.glow-hero {
+  text-shadow: 0 0 60px rgba(255, 107, 107, 0.25), 0 0 120px rgba(255, 107, 107, 0.08);
 }
 
-.card-glow {
-  box-shadow: 0 0 0 1px #1F1F1F, 0 4px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+.card-base {
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 32px rgba(0,0,0,0.5);
 }
 
-.card-glow-coral {
-  box-shadow: 0 0 0 1px #1F1F1F, 0 4px 24px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 107, 107, 0.06), inset 0 1px 0 rgba(255, 107, 107, 0.04);
+.ring-glow-coral {
+  filter: drop-shadow(0 0 8px rgba(255, 107, 107, 0.55)) drop-shadow(0 0 20px rgba(255, 107, 107, 0.25));
 }

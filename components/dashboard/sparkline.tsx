@@ -4,12 +4,21 @@ import { SparkPoint } from '@/lib/dashboard-data'
 
 interface SparklineProps {
   data: SparkPoint[]
-  trend: 'up' | 'down' | 'neutral'
+  /** stroke color as hex/rgb string */
+  color?: string
+  /** fill color as rgba string */
+  fillColor?: string
   width?: number
   height?: number
 }
 
-export function Sparkline({ data, trend, width = 120, height = 36 }: SparklineProps) {
+export function Sparkline({
+  data,
+  color = '#ffffff',
+  fillColor = 'rgba(255,255,255,0.12)',
+  width = 80,
+  height = 28,
+}: SparklineProps) {
   if (!data || data.length < 2) return null
 
   const values = data.map((d) => d.value)
@@ -17,26 +26,20 @@ export function Sparkline({ data, trend, width = 120, height = 36 }: SparklinePr
   const max = Math.max(...values)
   const range = max - min || 1
 
-  const padding = 3
-  const innerWidth = width - padding * 2
-  const innerHeight = height - padding * 2
+  const pad = 2
+  const iw = width - pad * 2
+  const ih = height - pad * 2
 
-  const points = values.map((v, i) => {
-    const x = padding + (i / (values.length - 1)) * innerWidth
-    const y = padding + innerHeight - ((v - min) / range) * innerHeight
-    return `${x},${y}`
+  const pts = values.map((v, i) => {
+    const x = pad + (i / (values.length - 1)) * iw
+    const y = pad + ih - ((v - min) / range) * ih
+    return [x, y] as [number, number]
   })
 
-  const pathD = `M ${points.join(' L ')}`
+  const linePath = `M ${pts.map(([x, y]) => `${x},${y}`).join(' L ')}`
+  const areaPath = `M ${pad},${pad + ih} L ${pts.map(([x, y]) => `${x},${y}`).join(' L ')} L ${pad + iw},${pad + ih} Z`
 
-  // Area fill path (close beneath the line)
-  const lastX = padding + innerWidth
-  const firstX = padding
-  const bottomY = padding + innerHeight
-  const areaD = `M ${firstX},${bottomY} L ${points.join(' L ')} L ${lastX},${bottomY} Z`
-
-  const strokeColor = trend === 'up' ? '#FF6B6B' : trend === 'down' ? '#6B7280' : '#FF6B6B'
-  const fillColor = trend === 'up' ? 'rgba(255,107,107,0.08)' : 'rgba(107,114,128,0.06)'
+  const lastPt = pts[pts.length - 1]
 
   return (
     <svg
@@ -46,24 +49,9 @@ export function Sparkline({ data, trend, width = 120, height = 36 }: SparklinePr
       fill="none"
       aria-hidden="true"
     >
-      {/* Area fill */}
-      <path d={areaD} fill={fillColor} />
-      {/* Line */}
-      <path
-        d={pathD}
-        stroke={strokeColor}
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-      {/* End dot */}
-      <circle
-        cx={points[points.length - 1].split(',')[0]}
-        cy={points[points.length - 1].split(',')[1]}
-        r={2.5}
-        fill={strokeColor}
-      />
+      <path d={areaPath} fill={fillColor} />
+      <path d={linePath} stroke={color} strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={lastPt[0]} cy={lastPt[1]} r={2.5} fill={color} />
     </svg>
   )
 }

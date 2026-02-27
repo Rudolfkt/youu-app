@@ -3,17 +3,17 @@ import { VideoItem } from './video-item'
 
 export function TopVideos() {
   return (
-    <section aria-label="This week's top videos">
-      <div className="flex items-center justify-between px-5 mb-1">
-        <h2 className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-          {"This Week's Top Videos"}
+    <section aria-label="Trending videos this week">
+      <div className="flex items-center justify-between px-5 mb-3">
+        <h2 className="text-[15px] font-bold text-foreground tracking-tight">
+          Trending This Week 🔥
         </h2>
-        <button className="text-[11px] font-semibold text-primary/80 hover:text-primary transition-colors">
+        <button className="text-[11px] font-semibold text-primary/70 hover:text-primary transition-colors">
           View all
         </button>
       </div>
 
-      <div className="mx-5 card-glow rounded-2xl bg-card px-4">
+      <div className="mx-5 rounded-[20px] bg-card border border-white/[0.04] card-base overflow-hidden">
         {topVideos.map((video, index) => (
           <VideoItem
             key={video.id}

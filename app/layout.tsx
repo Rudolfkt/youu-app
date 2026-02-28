@@ -10,8 +10,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'The Daily Plate — Creator Analytics',
-  description: 'YouTube creator analytics dashboard for The Daily Plate cooking channel.',
+  title: 'Youu — Know your channel. Own your growth.',
+  description: 'The premium YouTube creator analytics app. Beautiful stats, AI insights, and shareable moments.',
   generator: 'v0.app',
 }
 

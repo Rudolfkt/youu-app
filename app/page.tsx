@@ -1,51 +1,76 @@
-import { ChannelHeader } from '@/components/dashboard/channel-header'
-import { HeroStat } from '@/components/dashboard/hero-stat'
-import { StatCardsRow } from '@/components/dashboard/stat-cards-row'
-import { WeeklySummary } from '@/components/dashboard/weekly-summary'
-import { QuickInsights } from '@/components/dashboard/quick-insights'
-import { TopVideos } from '@/components/dashboard/top-videos'
-import { BottomNav } from '@/components/dashboard/bottom-nav'
+import { ScreenSplash } from '@/components/screens/screen-splash'
+import { ScreenDashboard } from '@/components/screens/screen-dashboard'
+import { ScreenShare } from '@/components/screens/screen-share'
+import { ScreenAI } from '@/components/screens/screen-ai'
 
-export default function DashboardPage() {
+const SCREENS = [
+  { label: 'Screen 1 — Splash / Onboarding', component: ScreenSplash },
+  { label: 'Screen 2 — Home Dashboard', component: ScreenDashboard },
+  { label: 'Screen 3 — Share Card Generator', component: ScreenShare },
+  { label: 'Screen 4 — AI Chat', component: ScreenAI },
+]
+
+export default function ShowcasePage() {
   return (
-    <div className="flex justify-center bg-[#050505] min-h-screen">
-      <main
-        className="relative w-full max-w-[390px] min-h-screen bg-background flex flex-col overflow-x-hidden"
-        aria-label="Creator analytics dashboard"
-      >
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto pb-28">
+    <main
+      className="min-h-screen flex flex-col items-center py-16 px-4"
+      style={{ background: '#040404' }}
+    >
+      {/* Page header */}
+      <div className="flex flex-col items-center mb-14">
+        <p className="text-[11px] font-semibold tracking-[0.2em] uppercase text-[#484848] mb-3">
+          UI Kit Showcase
+        </p>
+        <h1
+          className="text-[48px] font-black tracking-[-3px] text-white leading-none mb-3"
+          style={{ textShadow: '0 0 80px rgba(139,92,246,0.2)' }}
+        >
+          Youu
+        </h1>
+        <p className="text-[16px] text-[#606060] font-medium text-center max-w-[320px] leading-relaxed">
+          Know your channel.{' '}
+          <span className="text-[#888888]">Own your growth.</span>
+        </p>
 
-          {/* 1. Top bar */}
-          <ChannelHeader />
-
-          {/* 2. Hero stat — giant number + emotional headline */}
-          <HeroStat />
-
-          {/* 3. Pill cards — scrollable row with vivid gradients */}
-          <StatCardsRow />
-
-          <div className="h-6" />
-
-          {/* 4. Performance Pulse — glowing ring */}
-          <WeeklySummary />
-
-          <div className="h-6" />
-
-          {/* 5. Top Videos — trending section */}
-          <TopVideos />
-
-          <div className="h-6" />
-
-          {/* 6. Quick Insights */}
-          <QuickInsights />
-
-          <div className="h-4" />
+        {/* Accent palette chips */}
+        <div className="flex items-center gap-2 mt-6">
+          {[
+            { color: '#FF6B6B', label: 'Coral' },
+            { color: '#00D4AA', label: 'Teal' },
+            { color: '#8B5CF6', label: 'Purple' },
+            { color: '#F59E0B', label: 'Amber' },
+            { color: '#3B82F6', label: 'Blue' },
+          ].map((c) => (
+            <div key={c.color} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: '#111111', border: '1px solid #1E1E1E' }}>
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c.color, boxShadow: `0 0 6px ${c.color}80` }} />
+              <span className="text-[11px] text-[#606060] font-medium">{c.label}</span>
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* 7. Fixed frosted-glass bottom nav */}
-        <BottomNav />
-      </main>
-    </div>
+      {/* Screens stack */}
+      <div className="flex flex-col items-center gap-10 w-full">
+        {SCREENS.map(({ label, component: Screen }) => (
+          <div key={label} className="flex flex-col items-center gap-3 w-full">
+            {/* Screen label */}
+            <p className="text-[11px] font-semibold tracking-[0.15em] uppercase text-[#484848] self-center">
+              {label}
+            </p>
+            {/* Device shell */}
+            <div className="screen-shell" style={{ width: 390 }}>
+              <Screen />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="mt-16 flex flex-col items-center gap-2">
+        <p className="text-[11px] text-[#2a2a2a] font-medium tracking-widest uppercase">
+          Youu · 2026
+        </p>
+      </div>
+    </main>
   )
 }

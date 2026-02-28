@@ -16,7 +16,7 @@ function Sparkline({ color = 'white', points }: { color?: string; points: number
   }))
   const pathD = coords.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x} ${c.y}`).join(' ')
   const areaD = `${pathD} L ${w} ${h} L 0 ${h} Z`
-  const id = `spark-${color.replace('#', '')}-${Math.random().toString(36).slice(2, 6)}`
+  const id = `spark-${color.replace('#', '')}`
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} fill="none">
       <defs>

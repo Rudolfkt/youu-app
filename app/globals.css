@@ -4,40 +4,41 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* The Daily Plate — YouTube Creator Analytics Dashboard */
-  /* Always dark-first; no light mode override needed */
-  --background: #0A0A0A;
+  /* Youu — Creator Analytics Design System */
+  --background: #080808;
   --foreground: #F5F5F5;
   --card: #111111;
   --card-foreground: #F5F5F5;
   --popover: #111111;
   --popover-foreground: #F5F5F5;
   --primary: #FF6B6B;
-  --primary-foreground: #0A0A0A;
-  --secondary: #1F1F1F;
+  --primary-foreground: #080808;
+  --secondary: #1A1A1A;
   --secondary-foreground: #F5F5F5;
-  --muted: #1A1A1A;
-  --muted-foreground: #6B6B6B;
+  --muted: #161616;
+  --muted-foreground: #606060;
   --accent: #FF6B6B;
-  --accent-foreground: #0A0A0A;
+  --accent-foreground: #080808;
   --destructive: #FF6B6B;
-  --destructive-foreground: #0A0A0A;
-  --border: #1F1F1F;
-  --input: #1F1F1F;
+  --destructive-foreground: #080808;
+  --border: #1E1E1E;
+  --input: #1A1A1A;
   --ring: #FF6B6B;
-  --radius: 0.75rem;
-  /* Custom tokens */
+  --radius: 1.25rem; /* 20px card radius */
+  /* Youu accent palette */
   --coral: #FF6B6B;
-  --coral-glow: rgba(255, 107, 107, 0.15);
-  --coral-glow-strong: rgba(255, 107, 107, 0.25);
+  --teal: #00D4AA;
+  --purple: #8B5CF6;
+  --amber: #F59E0B;
+  --blue: #3B82F6;
+  --green: #4ADE80;
+  /* Surface & text */
   --surface: #111111;
-  --surface-raised: #161616;
-  --divider: #1F1F1F;
+  --surface-raised: #181818;
+  --divider: #1E1E1E;
   --text-primary: #F5F5F5;
-  --text-secondary: #8A8A8A;
-  --text-tertiary: #555555;
-  --green-positive: #4ADE80;
-  --green-glow: rgba(74, 222, 128, 0.15);
+  --text-secondary: #888888;
+  --text-tertiary: #484848;
 }
 
 @theme inline {
@@ -90,15 +91,53 @@
   scrollbar-width: none;
 }
 
-/* Glow utilities */
+/* Glow text utilities */
 .glow-hero {
-  text-shadow: 0 0 60px rgba(255, 107, 107, 0.25), 0 0 120px rgba(255, 107, 107, 0.08);
+  text-shadow: 0 0 80px rgba(255, 255, 255, 0.12), 0 0 40px rgba(255,255,255,0.06);
+}
+.glow-coral {
+  text-shadow: 0 0 40px rgba(255, 107, 107, 0.5), 0 0 80px rgba(255, 107, 107, 0.2);
 }
 
+/* Card shadow */
 .card-base {
-  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 4px 32px rgba(0,0,0,0.5);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.035) inset, 0 4px 32px rgba(0,0,0,0.55);
 }
 
+/* Drop-shadow filter glows for SVG rings */
 .ring-glow-coral {
-  filter: drop-shadow(0 0 8px rgba(255, 107, 107, 0.55)) drop-shadow(0 0 20px rgba(255, 107, 107, 0.25));
+  filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.7)) drop-shadow(0 0 24px rgba(255, 107, 107, 0.3));
+}
+.ring-glow-teal {
+  filter: drop-shadow(0 0 10px rgba(0, 212, 170, 0.7)) drop-shadow(0 0 24px rgba(0, 212, 170, 0.3));
+}
+.ring-glow-purple {
+  filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.7)) drop-shadow(0 0 24px rgba(139, 92, 246, 0.3));
+}
+
+/* Orb ambient glow for splash */
+.orb-glow {
+  box-shadow:
+    0 0 120px 60px rgba(139, 92, 246, 0.18),
+    0 0 200px 100px rgba(59, 130, 246, 0.10),
+    0 0 320px 160px rgba(255, 107, 107, 0.06);
+}
+
+/* Frosted glass for nav / input */
+.glass {
+  background: rgba(14, 14, 14, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Screen device shell */
+.screen-shell {
+  width: 390px;
+  border-radius: 44px;
+  overflow: hidden;
+  border: 1.5px solid #1E1E1E;
+  box-shadow:
+    0 0 0 1px #0A0A0A,
+    0 32px 80px rgba(0, 0, 0, 0.7),
+    0 0 120px rgba(139, 92, 246, 0.05);
 }

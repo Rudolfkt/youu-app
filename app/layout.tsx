@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { AuthSessionProvider } from '@/components/auth/session-provider'
 import './globals.css'
 
 const inter = Inter({
@@ -30,8 +31,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="font-sans antialiased bg-background text-foreground" suppressHydrationWarning>
-        {children}
+      <body className="font-sans antialiased text-foreground min-h-screen" style={{ background: '#080808' }} suppressHydrationWarning>
+        <AuthSessionProvider>
+          <div className="w-full max-w-[390px] min-h-screen mx-auto pb-[80px]">
+            {children}
+          </div>
+        </AuthSessionProvider>
         <Analytics />
       </body>
     </html>

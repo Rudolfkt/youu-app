@@ -1,5 +1,7 @@
 'use client'
 
+import { signIn } from 'next-auth/react'
+
 export function ScreenSplash() {
   return (
     <div className="relative w-full bg-[#080808] flex flex-col overflow-hidden" style={{ height: 844 }}>
@@ -128,6 +130,8 @@ export function ScreenSplash() {
 
         {/* CTA button */}
         <button
+          type="button"
+          onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
           className="w-full h-[58px] rounded-full font-bold text-[17px] tracking-[-0.2px] text-white flex items-center justify-center gap-3 relative overflow-hidden"
           style={{
             background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)',

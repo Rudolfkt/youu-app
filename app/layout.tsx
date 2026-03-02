@@ -30,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="font-sans antialiased text-foreground min-h-screen" style={{ background: '#080808' }} suppressHydrationWarning>
         <AuthSessionProvider>
           <div className="w-full max-w-[390px] min-h-screen mx-auto pb-[80px]">

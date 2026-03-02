@@ -1,5 +1,7 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+
 // --- Mini sparkline SVG ---
 function Sparkline({ color = 'white', points }: { color?: string; points: number[] }) {
   const w = 120
@@ -61,6 +63,21 @@ const TOP_VIDEOS = [
 ]
 
 export function ScreenDashboard() {
+  const [channel, setChannel] = useState<{
+    channelName: string
+    avatar: string
+    subscriberCount: number
+  } | null>(null)
+
+  useEffect(() => {
+    fetch('/api/youtube/channel')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) setChannel(data)
+      })
+      .catch(err => console.error('Failed to fetch channel:', err))
+  }, [])
+
   return (
     <div className="relative w-full flex-1 min-h-0 bg-[#080808] flex flex-col overflow-hidden">
       {/* Ambient top gradient */}
@@ -75,16 +92,37 @@ export function ScreenDashboard() {
         {/* TOP BAR */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <div
-              className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)', boxShadow: '0 0 16px rgba(255,107,107,0.3)' }}
+          <div
+              className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden"
+              style={{ boxShadow: '0 0 16px rgba(255,107,107,0.3)' }}
             >
-              <span className="text-[17px] font-black text-white">D</span>
+              {channel?.avatar ? (
+                <img
+                  src={channel.avatar}
+                  alt="Channel avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div
+                  className="w-full h-full flex items-center justify-center"
+                  style={{ background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)' }}
+                >
+                  <span className="text-[17px] font-black text-white">
+                    {channel?.channelName?.[0] ?? 'Y'}
+                  </span>
+                </div>
+              )}
             </div>
             <div>
-              <p className="text-[15px] font-bold text-white tracking-[-0.3px]">The Daily Plate</p>
+            <p className="text-[15px] font-bold text-white tracking-[-0.3px]">
+                {channel?.channelName ?? 'Loading...'}
+              </p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[13px] text-[#888888]">284K subscribers</span>
+              <span className="text-[13px] text-[#888888]">
+                  {channel?.subscriberCount
+                    ? `${channel.subscriberCount.toLocaleString()} subscribers`
+                    : 'Loading...'}
+                </span>
                 <span
                   className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full"
                   style={{ background: 'rgba(74,222,128,0.15)', color: '#4ADE80' }}

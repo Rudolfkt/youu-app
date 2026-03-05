@@ -32,12 +32,7 @@ function Sparkline({ color = 'white', points }: { color?: string; points: number
 }
 
 const HERO_POINTS = [42, 58, 51, 74, 68, 89, 95, 88, 102, 110, 124]
-const STAT_PILLS = [
-  { label: 'Watch Time', value: '86.4K hrs', sub: '+14%', from: '#00D4AA', to: '#059669', glow: 'rgba(0,212,170,0.25)' },
-  { label: 'Subscribers', value: '+2,847', sub: '+3.2%', from: '#FF6B6B', to: '#FF8E53', glow: 'rgba(255,107,107,0.25)' },
-  { label: 'Avg Duration', value: '8:42', sub: '+0:38', from: '#8B5CF6', to: '#6366F1', glow: 'rgba(139,92,246,0.25)' },
-  { label: 'CTR', value: '6.8%', sub: '+0.4%', from: '#3B82F6', to: '#06B6D4', glow: 'rgba(59,130,246,0.25)' },
-]
+
 const QUICK_INSIGHTS = [
   { label: 'Best day', value: 'Thursday' },
   { label: 'Peak hour', value: '7–9 PM' },
@@ -67,15 +62,51 @@ export function ScreenDashboard() {
     channelName: string
     avatar: string
     subscriberCount: number
+    channelId: string
+  } | null>(null)
+
+  const [videos, setVideos] = useState<{
+    id: string
+    title: string
+    thumbnail: string
+    publishedAt: string
+    viewCount: number
+    likeCount: number
+    duration: string
+  }[]>([])
+
+  const [analytics, setAnalytics] = useState<{
+    totalViews: number
+    watchTimeHours: number
+    avgViewDuration: number
+    subscribersGained: number
+    ctr: number
+    dailyViews: number[]
   } | null>(null)
 
   useEffect(() => {
     fetch('/api/youtube/channel')
       .then(res => res.json())
       .then(data => {
-        if (!data.error) setChannel(data)
+        if (!data.error) {
+          setChannel(data)
+          // Fetch videos
+          fetch(`/api/youtube/videos?channelId=${data.channelId}`)
+            .then(r => r.json())
+            .then(videosData => {
+              if (!videosData.error) setVideos(videosData)
+            })
+            .catch(err => console.error('Videos error:', err))
+          // Fetch analytics separately so a failure doesnt block videos
+          fetch(`/api/youtube/analytics?channelId=${data.channelId}`)
+            .then(r => r.json())
+            .then(analyticsData => {
+              if (!analyticsData.error) setAnalytics(analyticsData)
+            })
+            .catch(err => console.error('Analytics error:', err))
+        }
       })
-      .catch(err => console.error('Failed to fetch channel:', err))
+      .catch(err => console.error('Channel error:', err))
   }, [])
 
   return (
@@ -149,7 +180,7 @@ export function ScreenDashboard() {
           {/* Background orb */}
           <div
             className="absolute top-0 right-0 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)', transform: 'translate(20%, -20%)' }}
+            style={{ background: 'radial-gradient(circle, rgba(127, 76, 245, 0.15) 0%, transparent 70%)', transform: 'translate(20%, -20%)' }}
           />
           <div
             className="absolute bottom-0 left-0 w-32 h-32 rounded-full pointer-events-none"
@@ -162,8 +193,14 @@ export function ScreenDashboard() {
                 <p
                   className="text-[72px] font-black text-white tracking-[-4px] leading-none"
                   style={{ textShadow: '0 0 40px rgba(255,255,255,0.1)' }}
-                >
-                  1.24M
+                  >
+                  {analytics !== null
+                    ? analytics.totalViews > 1000000
+                      ? `${(analytics.totalViews / 1000000).toFixed(2)}M`
+                      : analytics.totalViews > 1000
+                        ? `${(analytics.totalViews / 1000).toFixed(1)}K`
+                        : `${analytics.totalViews}`
+                    : '—'}
                 </p>
               </div>
               <span
@@ -183,7 +220,46 @@ export function ScreenDashboard() {
 
         {/* STAT PILL CARDS — horizontal scroll */}
         <div className="flex gap-3 overflow-x-auto no-scrollbar mb-5 -mx-1 px-1">
-          {STAT_PILLS.map((pill) => (
+        {[
+            { 
+              label: 'Watch Time', 
+              value: analytics !== null
+              ? `${analytics.watchTimeHours.toLocaleString()} hrs` 
+              : '— hrs', 
+              sub: '', 
+              from: '#00D4AA', 
+              to: '#059669', 
+              glow: 'rgba(0,212,170,0.25)' 
+            },
+            { 
+              label: 'New Subs', 
+              value: analytics !== null
+              ? `+${analytics.subscribersGained.toLocaleString()}` 
+              : '—', 
+              sub: '', 
+              from: '#FF6B6B', 
+              to: '#FF8E53', 
+              glow: 'rgba(255,107,107,0.25)' 
+            },
+            { 
+              label: 'Avg Duration', 
+              value: analytics !== null
+              ? `${Math.floor(analytics.avgViewDuration / 60)}:${String(analytics.avgViewDuration % 60).padStart(2, '0')}` 
+              : '—', 
+              sub: '', 
+              from: '#8B5CF6', 
+              to: '#6366F1', 
+              glow: 'rgba(139,92,246,0.25)' 
+            },
+            { 
+              label: 'CTR', 
+              value: '—', 
+              sub: '', 
+              from: '#3B82F6', 
+              to: '#06B6D4', 
+              glow: 'rgba(59,130,246,0.25)' 
+            },
+          ].map((pill) => (
             <div
               key={pill.label}
               className="flex-shrink-0 rounded-[20px] p-4 relative overflow-hidden"
@@ -272,7 +348,19 @@ export function ScreenDashboard() {
             <span className="text-[12px] text-[#606060]">This week</span>
           </div>
           <div className="flex flex-col gap-2.5">
-            {TOP_VIDEOS.map((v) => (
+          {(videos.length > 0 ? videos.slice(0, 3).map((v, index) => ({
+            rank: index + 1,
+            title: v.title,
+            views: (v as any).viewCount != null
+              ? (v as any).viewCount > 1000 
+                ? `${((v as any).viewCount / 1000).toFixed(1)}K views`
+                : `${(v as any).viewCount} views`
+              : '0 views',
+            retention: '— kept',
+            accent: ['#FF6B6B', '#8B5CF6', '#3B82F6'][index],
+            duration: '—',
+            thumbnail: v.thumbnail,
+          })) : TOP_VIDEOS).map((v) => (
               <div
                 key={v.rank}
                 className="rounded-[16px] p-3.5 flex items-center gap-3 relative overflow-hidden"

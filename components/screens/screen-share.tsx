@@ -220,7 +220,7 @@ export function ScreenShare() {
   const activeCard = cards[activeIdx]
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#080808] text-white">
+    <div className="flex flex-col h-[100dvh] bg-background text-foreground">
       {/* Container to center the 9:16 card vertically and horizontally */}
       <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
         
@@ -257,7 +257,7 @@ export function ScreenShare() {
             <button
               key={idx}
               onClick={() => setActiveIdx(idx)}
-              className={`h-2 rounded-full transition-all duration-300 ${activeIdx === idx ? 'w-6 bg-white' : 'w-2 bg-white/20'}`}
+              className={`h-2 rounded-full transition-all duration-300 ${activeIdx === idx ? 'w-6 bg-foreground' : 'w-2 bg-foreground/20'}`}
               aria-label={`Go to card ${idx + 1}`}
             />
           ))}

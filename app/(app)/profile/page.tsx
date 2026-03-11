@@ -37,17 +37,17 @@ export default function ProfilePage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="w-full min-h-screen bg-[#080808] flex items-center justify-center">
-        <p className="text-[#606060] text-sm">Loading...</p>
+      <div className="w-full min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground text-sm">Loading...</p>
       </div>
     )
   }
 
   return (
-    <div className="relative w-full bg-[#080808] flex flex-col overflow-hidden min-h-screen">
+    <div className="relative w-full bg-background flex flex-col overflow-hidden min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-12 pb-4">
-        <p className="text-[20px] font-black text-white tracking-[-0.5px]">Profile</p>
+        <p className="text-[20px] font-black text-foreground tracking-[-0.5px]">Profile</p>
       </div>
 
       <div className="flex-1 px-5 pb-10">
@@ -55,7 +55,7 @@ export default function ProfilePage() {
         {/* Channel Card */}
         <div
           className="rounded-[20px] p-5 mb-6"
-          style={{ background: '#111111', border: '1px solid #1E1E1E' }}
+          style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}
         >
           <div className="flex items-center gap-4">
             {channelData?.avatar ? (
@@ -69,16 +69,16 @@ export default function ProfilePage() {
             ) : (
               <div
                 className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ background: '#1E1E1E' }}
+                style={{ background: 'var(--border)' }}
               >
-                <User size={24} color="#606060" />
+                <User size={24} color="var(--muted-foreground)" />
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-[18px] font-black text-white tracking-tight truncate">
+              <p className="text-[18px] font-black text-foreground tracking-tight truncate">
                 {channelData?.channelName ?? session?.user?.name ?? 'Loading...'}
               </p>
-              <p className="text-[13px] text-[#606060] font-medium mt-0.5 truncate">
+              <p className="text-[13px] text-muted-foreground font-medium mt-0.5 truncate">
                 {channelData?.handle ?? session?.user?.email ?? ''}
               </p>
             </div>
@@ -86,47 +86,47 @@ export default function ProfilePage() {
 
           {/* Stats row */}
           {channelData && (
-            <div className="flex gap-4 mt-5 pt-5" style={{ borderTop: '1px solid #1E1E1E' }}>
+            <div className="flex gap-4 mt-5 pt-5" style={{ borderTop: '1px solid var(--border)' }}>
               <div className="flex-1 text-center">
-                <p className="text-[20px] font-black text-white tracking-tight">
+                <p className="text-[20px] font-black text-foreground tracking-tight">
                   {formatCount(channelData.subscriberCount)}
                 </p>
-                <p className="text-[11px] text-[#606060] font-medium uppercase tracking-wider mt-0.5">Subscribers</p>
+                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Subscribers</p>
               </div>
-              <div className="w-px bg-[#1E1E1E]" />
+              <div className="w-px bg-border" />
               <div className="flex-1 text-center">
-                <p className="text-[20px] font-black text-white tracking-tight">
+                <p className="text-[20px] font-black text-foreground tracking-tight">
                   {formatCount(channelData.totalViews)}
                 </p>
-                <p className="text-[11px] text-[#606060] font-medium uppercase tracking-wider mt-0.5">Total Views</p>
+                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Total Views</p>
               </div>
-              <div className="w-px bg-[#1E1E1E]" />
+              <div className="w-px bg-border" />
               <div className="flex-1 text-center">
-                <p className="text-[20px] font-black text-white tracking-tight">
+                <p className="text-[20px] font-black text-foreground tracking-tight">
                   {channelData.videoCount}
                 </p>
-                <p className="text-[11px] text-[#606060] font-medium uppercase tracking-wider mt-0.5">Videos</p>
+                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Videos</p>
               </div>
             </div>
           )}
         </div>
 
         {/* Connected Account */}
-        <p className="text-[11px] font-semibold text-[#484848] uppercase tracking-wider mb-3">Connected Account</p>
+        <p className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-3">Connected Account</p>
         <div
           className="rounded-[16px] mb-6 overflow-hidden"
-          style={{ background: '#111111', border: '1px solid #1E1E1E' }}
+          style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}
         >
           <div className="flex items-center gap-4 px-5 py-4">
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: '#1E1E1E' }}
+              style={{ background: 'var(--border)' }}
             >
               <Youtube size={16} color="#FF6B6B" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-bold text-white">YouTube</p>
-              <p className="text-[12px] text-[#606060] font-medium truncate">
+              <p className="text-[14px] font-bold text-foreground">YouTube</p>
+              <p className="text-[12px] text-muted-foreground font-medium truncate">
                 {session?.user?.email ?? ''}
               </p>
             </div>
@@ -140,35 +140,35 @@ export default function ProfilePage() {
         </div>
 
         {/* App Section */}
-        <p className="text-[11px] font-semibold text-[#484848] uppercase tracking-wider mb-3">App</p>
+        <p className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-3">App</p>
         <div
           className="rounded-[16px] mb-6 overflow-hidden"
-          style={{ background: '#111111', border: '1px solid #1E1E1E' }}
+          style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}
         >
-          <div className="flex items-center gap-4 px-5 py-4" style={{ borderBottom: '1px solid #1E1E1E' }}>
+          <div className="flex items-center gap-4 px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
             <div className="flex-1">
-              <p className="text-[14px] font-bold text-white">Version</p>
+              <p className="text-[14px] font-bold text-foreground">Version</p>
             </div>
-            <p className="text-[13px] text-[#606060] font-medium">1.0.0</p>
+            <p className="text-[13px] text-muted-foreground font-medium">1.0.0</p>
           </div>
           <div className="flex items-center gap-4 px-5 py-4">
             <div className="flex-1">
-              <p className="text-[14px] font-bold text-white">Data refreshes</p>
+              <p className="text-[14px] font-bold text-foreground">Data refreshes</p>
             </div>
-            <p className="text-[13px] text-[#606060] font-medium">On every visit</p>
+            <p className="text-[13px] text-muted-foreground font-medium">On every visit</p>
           </div>
         </div>
 
         {/* Appearance */}
-        <p className="text-[11px] font-semibold text-[#484848] uppercase tracking-wider mb-3">Appearance</p>
+        <p className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-3">Appearance</p>
         <div
           className="rounded-[16px] mb-6 overflow-hidden"
-          style={{ background: '#111111', border: '1px solid #1E1E1E' }}
+          style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: 'var(--card-shadow)' }}
         >
           <div className="flex items-center gap-4 px-5 py-4">
             <div className="flex-1">
-              <p className="text-[14px] font-bold text-white">Theme</p>
-              <p className="text-[12px] text-[#606060] font-medium mt-0.5">
+              <p className="text-[14px] font-bold text-foreground">Theme</p>
+              <p className="text-[12px] text-muted-foreground font-medium mt-0.5">
                 {mounted ? (theme === 'dark' ? 'Dark mode' : 'Light mode') : ''}
               </p>
             </div>
@@ -177,7 +177,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                 className="w-12 h-7 rounded-full relative transition-colors duration-300"
-                style={{ background: theme === 'dark' ? '#FF6B6B' : '#1E1E1E' }}
+                style={{ background: theme === 'dark' ? '#FF6B6B' : 'var(--border)' }}
               >
                 <div
                   className="absolute top-1 w-5 h-5 rounded-full bg-white transition-all duration-300"
@@ -193,7 +193,7 @@ export default function ProfilePage() {
           type="button"
           onClick={() => signOut({ callbackUrl: '/' })}
           className="w-full h-[56px] rounded-full flex items-center justify-center gap-2 font-bold text-[16px] transition-transform active:scale-95"
-          style={{ background: '#161616', border: '1px solid #1E1E1E', color: '#FF6B6B' }}
+          style={{ background: 'var(--card)', border: '1px solid var(--border)', color: '#FF6B6B', boxShadow: 'var(--card-shadow)' }}
         >
           <LogOut size={18} />
           Sign Out

@@ -19,8 +19,8 @@ export default function DashboardPage() {
 
   if (status === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#080808]">
-        <Spinner className="w-6 h-6 text-[#F5F5F5]" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Spinner className="w-6 h-6 text-foreground" />
       </div>
     )
   }

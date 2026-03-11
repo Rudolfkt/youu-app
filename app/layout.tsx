@@ -34,7 +34,12 @@ export default function RootLayout({
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="font-sans antialiased min-h-screen" suppressHydrationWarning>
         <AuthSessionProvider>
-          <ThemeProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
             <div className="w-full max-w-[390px] min-h-screen mx-auto pb-[80px]">
               {children}
             </div>

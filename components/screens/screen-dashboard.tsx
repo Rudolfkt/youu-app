@@ -110,7 +110,7 @@ export function ScreenDashboard() {
   }, [])
 
   return (
-    <div className="relative w-full flex-1 min-h-0 bg-[#080808] flex flex-col overflow-hidden">
+    <div className="relative w-full flex-1 min-h-0 bg-background flex flex-col overflow-hidden">
       {/* Ambient top gradient */}
       <div
         className="absolute top-0 left-0 right-0 h-64 pointer-events-none"
@@ -145,11 +145,11 @@ export function ScreenDashboard() {
               )}
             </div>
             <div>
-            <p className="text-[15px] font-bold text-white tracking-[-0.3px]">
+            <p className="text-[15px] font-bold text-foreground tracking-[-0.3px]">
                 {channel?.channelName ?? 'Loading...'}
               </p>
               <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[13px] text-[#888888]">
+              <span className="text-[13px] text-text-secondary">
                   {channel?.subscriberCount
                     ? `${channel.subscriberCount.toLocaleString()} subscribers`
                     : 'Loading...'}
@@ -163,7 +163,7 @@ export function ScreenDashboard() {
               </div>
             </div>
           </div>
-          <button className="w-9 h-9 rounded-full bg-[#161616] border border-[#1E1E1E] flex items-center justify-center">
+          <button className="w-9 h-9 rounded-full bg-surface border border-border flex items-center justify-center">
             <BellIcon />
           </button>
         </div>
@@ -277,7 +277,7 @@ export function ScreenDashboard() {
               <p className="text-[11px] font-semibold tracking-wide uppercase mb-2" style={{ color: pill.from }}>
                 {pill.label}
               </p>
-              <p className="text-[22px] font-black text-white tracking-[-1px] leading-none mb-1">{pill.value}</p>
+              <p className="text-[22px] font-black text-foreground tracking-[-1px] leading-none mb-1">{pill.value}</p>
               <p className="text-[12px] font-medium" style={{ color: '#4ADE80' }}>{pill.sub}</p>
             </div>
           ))}
@@ -287,15 +287,15 @@ export function ScreenDashboard() {
         <div
           className="rounded-[20px] p-5 mb-4 flex items-center gap-5"
           style={{
-            background: '#111111',
-            border: '1px solid #1E1E1E',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            boxShadow: 'var(--card-shadow)',
           }}
         >
           {/* Ring SVG */}
           <div className="relative flex-shrink-0" style={{ width: 88, height: 88 }}>
             <svg width="88" height="88" viewBox="0 0 88 88" fill="none">
-              <circle cx="44" cy="44" r="36" stroke="#1E1E1E" strokeWidth="6" />
+              <circle cx="44" cy="44" r="36" stroke="var(--border)" strokeWidth="6" />
               <circle
                 cx="44" cy="44" r="36"
                 stroke="url(#ringGrad)"
@@ -314,16 +314,16 @@ export function ScreenDashboard() {
               </defs>
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[26px] font-black text-white tracking-[-2px] leading-none">94</span>
-              <span className="text-[10px] text-[#606060] font-medium">/100</span>
+              <span className="text-[26px] font-black text-foreground tracking-[-2px] leading-none">94</span>
+              <span className="text-[10px] text-muted-foreground font-medium">/100</span>
             </div>
           </div>
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#606060] mb-1">Performance</p>
-            <p className="text-[20px] font-black text-white tracking-[-0.5px] leading-tight mb-1">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Performance</p>
+            <p className="text-[20px] font-black text-foreground tracking-[-0.5px] leading-tight mb-1">
               Crushing it
             </p>
-            <p className="text-[13px] text-[#888888]">Best week in 3 months</p>
+            <p className="text-[13px] text-text-secondary">Best week in 3 months</p>
           </div>
         </div>
 
@@ -333,10 +333,10 @@ export function ScreenDashboard() {
             <div
               key={item.label}
               className="rounded-[16px] p-3 flex flex-col gap-1"
-              style={{ background: '#111111', border: '1px solid #1E1E1E' }}
+              style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
             >
-              <p className="text-[10px] font-medium text-[#606060] uppercase tracking-wider">{item.label}</p>
-              <p className="text-[14px] font-bold text-white tracking-[-0.3px] leading-tight">{item.value}</p>
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{item.label}</p>
+              <p className="text-[14px] font-bold text-foreground tracking-[-0.3px] leading-tight">{item.value}</p>
             </div>
           ))}
         </div>
@@ -344,8 +344,8 @@ export function ScreenDashboard() {
         {/* TOP VIDEOS */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[15px] font-bold text-white tracking-[-0.3px]">Top Videos</p>
-            <span className="text-[12px] text-[#606060]">This week</span>
+            <p className="text-[15px] font-bold text-foreground tracking-[-0.3px]">Top Videos</p>
+            <span className="text-[12px] text-muted-foreground">This week</span>
           </div>
           <div className="flex flex-col gap-2.5">
           {(videos.length > 0 ? videos.slice(0, 3).map((v, index) => ({
@@ -364,7 +364,7 @@ export function ScreenDashboard() {
               <div
                 key={v.rank}
                 className="rounded-[16px] p-3.5 flex items-center gap-3 relative overflow-hidden"
-                style={{ background: '#111111', border: '1px solid #1E1E1E' }}
+                style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
               >
                 {/* Left gradient bar */}
                 <div
@@ -379,9 +379,9 @@ export function ScreenDashboard() {
                   <PlayIcon color={v.accent} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-white tracking-[-0.2px] leading-tight truncate mb-1">{v.title}</p>
+                  <p className="text-[13px] font-semibold text-foreground tracking-[-0.2px] leading-tight truncate mb-1">{v.title}</p>
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] text-[#888888]">{v.views}</span>
+                    <span className="text-[12px] text-text-secondary">{v.views}</span>
                     <span
                       className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
                       style={{ background: `${v.accent}22`, color: v.accent }}
@@ -390,7 +390,7 @@ export function ScreenDashboard() {
                     </span>
                   </div>
                 </div>
-                <span className="text-[12px] text-[#484848] flex-shrink-0">{v.duration}</span>
+                <span className="text-[12px] text-text-tertiary flex-shrink-0">{v.duration}</span>
               </div>
             ))}
           </div>
@@ -405,9 +405,9 @@ function BellIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
       <path d="M12 2C8.13 2 5 5.13 5 9V15L3 17V18H21V17L19 15V9C19 5.13 15.87 2 12 2Z"
-        stroke="#606060" strokeWidth="1.8" strokeLinejoin="round" />
+        stroke="var(--muted-foreground)" strokeWidth="1.8" strokeLinejoin="round" />
       <path d="M10 20C10 21.1 10.9 22 12 22C13.1 22 14 21.1 14 20"
-        stroke="#606060" strokeWidth="1.8" strokeLinecap="round" />
+        stroke="var(--muted-foreground)" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   )
 }

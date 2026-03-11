@@ -3,8 +3,54 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  /* Youu — Creator Analytics Design System */
+:root,
+.light {
+  /* Youu Light Theme */
+  --background: #F5F5F5;
+  --foreground: #1C1C1E;
+  --card: #FFFFFF;
+  --card-foreground: #1C1C1E;
+  --popover: #FFFFFF;
+  --popover-foreground: #1C1C1E;
+  --primary: #FF6B6B;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F0F0F0;
+  --secondary-foreground: #1C1C1E;
+  --muted: #E8E8E8;
+  --muted-foreground: #8E8E93;
+  --accent: #FF6B6B;
+  --accent-foreground: #FFFFFF;
+  --destructive: #FF6B6B;
+  --destructive-foreground: #FFFFFF;
+  --border: #E5E5E5;
+  --input: #F0F0F0;
+  --ring: #FF6B6B;
+  --radius: 1.25rem;
+  /* Youu accent palette */
+  --coral: #FF6B6B;
+  --teal: #00D4AA;
+  --purple: #8B5CF6;
+  --amber: #F59E0B;
+  --blue: #3B82F6;
+  --green: #4ADE80;
+  /* Surface & text */
+  --surface: #FFFFFF;
+  --surface-raised: #FFFFFF;
+  --divider: #E5E5E5;
+  --text-primary: #1C1C1E;
+  --text-secondary: #6B6B6B;
+  --text-tertiary: #8E8E93;
+  /* Nav glass */
+  --nav-glass: rgba(245, 245, 245, 0.88);
+  --nav-border: #E5E5E5;
+  /* Card shadow for light */
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06);
+  /* Icon tint for inactive nav */
+  --icon-inactive: #AEAEB2;
+}
+
+.dark {
+  /* Youu Dark Theme */
   --background: #080808;
   --foreground: #F5F5F5;
   --card: #111111;
@@ -24,7 +70,7 @@
   --border: #1E1E1E;
   --input: #1A1A1A;
   --ring: #FF6B6B;
-  --radius: 1.25rem; /* 20px card radius */
+  --radius: 1.25rem;
   /* Youu accent palette */
   --coral: #FF6B6B;
   --teal: #00D4AA;
@@ -39,6 +85,13 @@
   --text-primary: #F5F5F5;
   --text-secondary: #888888;
   --text-tertiary: #484848;
+  /* Nav glass */
+  --nav-glass: rgba(14, 14, 14, 0.82);
+  --nav-border: #1E1E1E;
+  /* Card shadow for dark */
+  --card-shadow: 0 1px 0 rgba(255,255,255,0.035) inset, 0 4px 32px rgba(0,0,0,0.55);
+  /* Icon tint for inactive nav */
+  --icon-inactive: #484848;
 }
 
 @theme inline {
@@ -62,6 +115,15 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-divider: var(--divider);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-nav-glass: var(--nav-glass);
+  --color-nav-border: var(--nav-border);
+  --color-icon-inactive: var(--icon-inactive);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -72,8 +134,11 @@
   * {
     @apply border-border outline-ring/50;
   }
-  html {
+  html.dark {
     color-scheme: dark;
+  }
+  html.light {
+    color-scheme: light;
   }
   body {
     @apply bg-background text-foreground font-sans;
@@ -101,7 +166,7 @@
 
 /* Card shadow */
 .card-base {
-  box-shadow: 0 1px 0 rgba(255,255,255,0.035) inset, 0 4px 32px rgba(0,0,0,0.55);
+  box-shadow: var(--card-shadow);
 }
 
 /* Drop-shadow filter glows for SVG rings */
@@ -125,7 +190,7 @@
 
 /* Frosted glass for nav / input */
 .glass {
-  background: rgba(14, 14, 14, 0.82);
+  background: var(--nav-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }

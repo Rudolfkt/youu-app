@@ -135,7 +135,7 @@ export function ScreenAI() {
         </div>
 
         <div
-          className="rounded-[20px] p-4 mb-4 relative overflow-hidden"
+          className="rounded-[20px] p-4 mb-4 relative overflow-hidden anim-fade-up"
           style={{ background: 'var(--card)', border: '1px solid var(--border)', borderLeft: '3px solid #FF6B6B' }}
         >
           <div className="flex items-start gap-3">
@@ -155,7 +155,7 @@ export function ScreenAI() {
         </div>
 
         {messages.length === 0 && (
-          <div className="mb-6">
+          <div className="mb-6 anim-fade-up" style={{ animationDelay: '150ms' }}>
             <p className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-3">
               Suggested questions
             </p>
@@ -178,7 +178,7 @@ export function ScreenAI() {
         )}
 
         {messages.map((msg, index) => (
-          <div key={index} className={`mb-4 flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={index} className={`mb-4 flex ${msg.role === 'user' ? 'justify-end anim-slide-right' : 'justify-start anim-slide-left'}`}>
             {msg.role === 'ai' && (
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 mr-3"

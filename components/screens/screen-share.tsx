@@ -244,7 +244,9 @@ export function ScreenShare() {
           )}
 
           {/* Active Card Content */}
-          {activeCard.render()}
+          <div key={activeIdx} className="h-full anim-card-slide">
+            {activeCard.render()}
+          </div>
         </div>
       </div>
 
@@ -267,7 +269,7 @@ export function ScreenShare() {
         <button 
           onClick={handleExport}
           disabled={isExporting}
-          className="w-full max-w-[340px] h-[56px] rounded-full font-bold text-[16px] flex items-center justify-center gap-2 transition-transform active:scale-95 disabled:opacity-50"
+          className="w-full max-w-[340px] h-[56px] rounded-full font-bold text-[16px] flex items-center justify-center gap-2 press-scale disabled:opacity-50"
           style={{
             background: activeCard.theme === 'light' ? '#1C1C1E' : '#FFFFFF',
             color: activeCard.theme === 'light' ? '#FFFFFF' : '#000000'

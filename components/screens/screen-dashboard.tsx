@@ -52,7 +52,7 @@ const TOP_VIDEOS = [
     title: 'My Knife Sharpening Secrets',
     views: '187K views',
     retention: '68% kept',
-    accent: '#8B5CF6',
+    accent: '#F59E0B',
     duration: '9:55',
   },
 ]
@@ -168,23 +168,24 @@ export function ScreenDashboard() {
           </button>
         </div>
 
-        {/* HERO CARD — purple to blue gradient */}
+        {/* HERO CARD — dark neutral gradient */}
         <div
-          className="rounded-[20px] p-5 mb-4 relative overflow-hidden"
+          className="rounded-[20px] p-5 mb-4 relative overflow-hidden anim-fade-up"
           style={{
-            background: 'linear-gradient(135deg, #1a0a3e 0%, #0d1a3a 60%, #081428 100%)',
-            border: '1px solid rgba(139,92,246,0.2)',
-            boxShadow: '0 8px 40px rgba(0,0,0,0.5), 0 0 60px rgba(139,92,246,0.06)',
+            background: 'linear-gradient(135deg, #141414 0%, #0E0E0E 60%, #0A0A0A 100%)',
+            border: '1px solid rgba(255,107,107,0.12)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.5), 0 0 60px rgba(255,107,107,0.04)',
+            animationDelay: '0ms',
           }}
         >
           {/* Background orb */}
           <div
             className="absolute top-0 right-0 w-48 h-48 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(127, 76, 245, 0.15) 0%, transparent 70%)', transform: 'translate(20%, -20%)' }}
+            style={{ background: 'radial-gradient(circle, rgba(255,107,107,0.08) 0%, transparent 70%)', transform: 'translate(20%, -20%)' }}
           />
           <div
             className="absolute bottom-0 left-0 w-32 h-32 rounded-full pointer-events-none"
-            style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)', transform: 'translate(-20%, 20%)' }}
+            style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)', transform: 'translate(-20%, 20%)' }}
           />
           <div className="relative z-10">
             <div className="flex items-start justify-between mb-1">
@@ -213,13 +214,13 @@ export function ScreenDashboard() {
             <p className="text-[13px] text-[#8888aa] mb-4">Best week in 3 months</p>
             {/* Sparkline */}
             <div className="opacity-60">
-              <Sparkline color="#8B5CF6" points={HERO_POINTS} />
+              <Sparkline color="#FF6B6B" points={HERO_POINTS} />
             </div>
           </div>
         </div>
 
         {/* STAT PILL CARDS — horizontal scroll */}
-        <div className="flex gap-3 overflow-x-auto no-scrollbar mb-5 -mx-1 px-1">
+        <div className="flex gap-3 overflow-x-auto no-scrollbar mb-5 -mx-1 px-1 anim-fade-up" style={{ animationDelay: '100ms' }}>
         {[
             { 
               label: 'Watch Time', 
@@ -247,9 +248,9 @@ export function ScreenDashboard() {
               ? `${Math.floor(analytics.avgViewDuration / 60)}:${String(analytics.avgViewDuration % 60).padStart(2, '0')}` 
               : '—', 
               sub: '', 
-              from: '#8B5CF6', 
-              to: '#6366F1', 
-              glow: 'rgba(139,92,246,0.25)' 
+              from: '#F59E0B', 
+              to: '#D97706', 
+              glow: 'rgba(245,158,11,0.25)' 
             },
             { 
               label: 'CTR', 
@@ -285,7 +286,7 @@ export function ScreenDashboard() {
 
         {/* PERFORMANCE RING */}
         <div
-          className="rounded-[20px] p-5 mb-4 flex items-center gap-5"
+          className="rounded-[20px] p-5 mb-4 flex items-center gap-5 anim-fade-up"
           style={{
             background: 'var(--card)',
             border: '1px solid var(--border)',
@@ -328,7 +329,7 @@ export function ScreenDashboard() {
         </div>
 
         {/* QUICK INSIGHTS ROW */}
-        <div className="grid grid-cols-3 gap-2.5 mb-4">
+        <div className="grid grid-cols-3 gap-2.5 mb-4 anim-fade-up" style={{ animationDelay: '200ms' }}>
           {QUICK_INSIGHTS.map((item) => (
             <div
               key={item.label}
@@ -342,7 +343,7 @@ export function ScreenDashboard() {
         </div>
 
         {/* TOP VIDEOS */}
-        <div className="mb-4">
+        <div className="mb-4 anim-fade-up" style={{ animationDelay: '300ms' }}>
           <div className="flex items-center justify-between mb-3">
             <p className="text-[15px] font-bold text-foreground tracking-[-0.3px]">Top Videos</p>
             <span className="text-[12px] text-muted-foreground">This week</span>
@@ -357,7 +358,7 @@ export function ScreenDashboard() {
                 : `${(v as any).viewCount} views`
               : '0 views',
             retention: '— kept',
-            accent: ['#FF6B6B', '#8B5CF6', '#3B82F6'][index],
+            accent: ['#FF6B6B', '#F59E0B', '#3B82F6'][index],
             duration: '—',
             thumbnail: v.thumbnail,
           })) : TOP_VIDEOS).map((v) => (

@@ -29,7 +29,9 @@ export function BottomNav() {
               href={tab.href}
               className="flex flex-col items-center gap-1 px-3 py-1.5 relative"
             >
-              <Icon active={active} />
+              <div className={active ? 'anim-bounce-tab' : ''}>
+                <Icon active={active} />
+              </div>
               <span
                 className="text-[10px] font-medium tracking-wide"
                 style={{ color: active ? '#FF6B6B' : 'var(--icon-inactive)' }}

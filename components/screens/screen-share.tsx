@@ -1125,11 +1125,11 @@ export function ScreenShare() {
     setVideosLoading(true)
     setVideosError(false)
 
-    fetch('/api/youtube/channel')
+    fetch('/api/youtube/channel', { credentials: 'include' })
       .then((r) => r.json())
       .then((ch) => {
         if (ch.error) throw new Error(ch.error)
-        return fetch(`/api/youtube/videos?channelId=${ch.channelId}`)
+        return fetch(`/api/youtube/videos?channelId=${ch.channelId}`, { credentials: 'include' })
       })
       .then((r) => r.json())
       .then((data: VideoData[]) => {

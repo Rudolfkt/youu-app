@@ -42,7 +42,7 @@ const THEMES: ThemeConfig[] = [
     accent: '#FF6B6B',
     statBg: '#161616',
     statBorder: 'rgba(255,255,255,0.08)',
-    glowColor: 'rgba(217,119,6,0.2)',
+    glowColor: 'rgba(255, 107, 107, 0.18)',
     swatch: '#000000',
     isDark: true,
   },
@@ -112,6 +112,7 @@ const THEMES: ThemeConfig[] = [
 
 const MOCK_DATA = {
   channelName: 'Creator',
+  channelAvatar: '',
   month: 'March 2026',
   subscribers: { current: 953, nextMilestone: 1_000 },
   subscriberGrowth: { thisWeek: 48, lastWeek: 31 },
@@ -179,6 +180,15 @@ function formatDate(iso: string): string {
   })
 }
 
+// ─── Card background helper ──────────────────────────────
+
+function cardBackground(theme: ThemeConfig): React.CSSProperties {
+  if (theme.id === 'midnight') {
+    return { background: 'linear-gradient(160deg, #1A0F0A 0%, #0E0908 55%, #080808 100%)' }
+  }
+  return { backgroundColor: theme.bg }
+}
+
 // ─── Noise Overlay ──────────────────────────────────────
 
 function NoiseOverlay() {
@@ -192,17 +202,43 @@ function NoiseOverlay() {
 
 // ─── Card Identity (top) ────────────────────────────────
 
-function CardIdentity({ t }: { t: ThemeConfig }) {
+function CardIdentity({ t, avatarUrl }: { t: ThemeConfig; avatarUrl?: string }) {
   return (
     <div className="flex items-center justify-center gap-2 mb-5">
-      <div
-        className="w-6 h-6 rounded-full flex items-center justify-center"
-        style={{ background: t.accent }}
-      >
-        <span className="text-[10px] font-bold" style={{ color: t.isDark ? '#000' : '#FFF' }}>
-          {MOCK_DATA.channelName[0]}
-        </span>
-      </div>
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt={MOCK_DATA.channelName}
+          width={48}
+          height={48}
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            objectFit: 'cover',
+            border: `2px solid ${t.accent}`,
+            flexShrink: 0,
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            background: t.accent,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            border: `2px solid ${t.accent}`,
+          }}
+        >
+          <span className="text-[18px] font-bold" style={{ color: t.isDark ? '#000' : '#FFF' }}>
+            {MOCK_DATA.channelName[0]}
+          </span>
+        </div>
+      )}
       <span className="text-[12px] font-medium tracking-tight" style={{ color: t.textMuted }}>
         {MOCK_DATA.channelName}
       </span>
@@ -229,13 +265,22 @@ function CardFooter({ t }: { t: ThemeConfig }) {
 
 function CardTitle({ line1, line2, t }: { line1: string; line2: string; t: ThemeConfig }) {
   return (
-    <h2 className="leading-none tracking-tighter mb-2">
-      <span className="block text-[48px] font-black anim-fade-up" style={{ color: t.text }}>
+    <h2 className="leading-none mb-2" style={{ letterSpacing: '-2px' }}>
+      <span
+        className="block anim-fade-up"
+        style={{ color: t.text, fontSize: 44, fontWeight: 900 }}
+      >
         {line1}
       </span>
       <span
-        className="block text-[48px] font-black anim-fade-up"
-        style={{ color: t.accent, animationDelay: '80ms' }}
+        className="block anim-fade-up"
+        style={{
+          color: t.accent,
+          fontSize: 44,
+          fontWeight: 900,
+          fontStyle: 'italic',
+          animationDelay: '80ms',
+        }}
       >
         {line2}
       </span>
@@ -258,8 +303,14 @@ function StatPill({
 }) {
   return (
     <div
-      className="flex-1 rounded-2xl p-4"
-      style={{ background: t.statBg, border: `1px solid ${t.statBorder}` }}
+      className="flex-1 p-4"
+      style={{
+        background: 'rgba(255,255,255,0.06)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: 14,
+      }}
     >
       <p
         className="text-[10px] font-bold uppercase tracking-wider mb-1"
@@ -284,7 +335,7 @@ function renderCard1(t: ThemeConfig): React.ReactNode {
   const away = nextMilestone - current
   return (
     <div className="h-full flex flex-col relative z-10 p-7">
-      <CardIdentity t={t} />
+      <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="your" line2="subscribers" t={t} />
       <div className="flex-1 flex flex-col justify-center">
         <p
@@ -312,7 +363,7 @@ function renderCard2(t: ThemeConfig): React.ReactNode {
   const isUp = change >= 0
   return (
     <div className="h-full flex flex-col relative z-10 p-7">
-      <CardIdentity t={t} />
+      <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="subscriber" line2="growth" t={t} />
       <div className="flex-1 flex flex-col justify-center gap-6">
         <div>
@@ -366,7 +417,7 @@ function renderCard3(t: ThemeConfig): React.ReactNode {
       : 0
   return (
     <div className="h-full flex flex-col relative z-10 p-7">
-      <CardIdentity t={t} />
+      <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="watch" line2="time" t={t} />
       <div className="flex-1 flex flex-col justify-center">
         <p
@@ -395,13 +446,32 @@ function renderCard4(t: ThemeConfig): React.ReactNode {
   const v = MOCK_DATA.bestVideoEver
   return (
     <div className="h-full flex flex-col relative z-10 p-7">
-      <CardIdentity t={t} />
+      <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="best video" line2="ever" t={t} />
       <div className="flex-1 flex flex-col justify-center gap-5">
         <div
-          className="w-full aspect-video rounded-2xl"
-          style={{ background: t.statBg, border: `1px solid ${t.statBorder}` }}
-        />
+          className="w-full aspect-video rounded-2xl flex items-center justify-center relative overflow-hidden"
+          style={{ background: '#0D0D0D', border: '1px solid rgba(255,107,107,0.15)' }}
+        >
+          <div
+            className="absolute inset-0"
+            style={{ background: 'rgba(255,107,107,0.08)' }}
+          />
+          <div
+            className="relative z-10 flex items-center justify-center"
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              background: 'rgba(255,107,107,0.25)',
+              border: '1px solid rgba(255,107,107,0.4)',
+            }}
+          >
+            <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
+              <path d="M2 1.5L12.5 8L2 14.5V1.5Z" fill="#FF6B6B" fillOpacity="0.9" />
+            </svg>
+          </div>
+        </div>
         <div>
           <p
             className="text-[17px] font-black tracking-tight leading-snug mb-2 line-clamp-2"
@@ -431,7 +501,7 @@ function renderCard4(t: ThemeConfig): React.ReactNode {
 function renderCard5(t: ThemeConfig): React.ReactNode {
   return (
     <div className="h-full flex flex-col relative z-10 p-7">
-      <CardIdentity t={t} />
+      <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="top" line2="videos" t={t} />
       <p
         className="text-[12px] font-medium uppercase tracking-widest mb-6"
@@ -443,9 +513,19 @@ function renderCard5(t: ThemeConfig): React.ReactNode {
         {MOCK_DATA.topVideosByViews.map((v, i) => (
           <div key={i} className="flex items-center gap-3 relative">
             <div
-              className="w-14 h-14 rounded-xl flex-shrink-0"
-              style={{ background: t.statBg, border: `1px solid ${t.statBorder}` }}
-            />
+              className="flex-shrink-0 flex items-center justify-center relative overflow-hidden"
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 12,
+                background: 'rgba(255,107,107,0.08)',
+                border: '1px solid rgba(255,107,107,0.15)',
+              }}
+            >
+              <svg width="12" height="14" viewBox="0 0 12 14" fill="none">
+                <path d="M1.5 1.5L10.5 7L1.5 12.5V1.5Z" fill="#FF6B6B" fillOpacity="0.7" />
+              </svg>
+            </div>
             <div className="flex-1 min-w-0 pr-10">
               <p
                 className="text-[14px] font-bold truncate tracking-tight"
@@ -474,7 +554,7 @@ function renderCard5(t: ThemeConfig): React.ReactNode {
 function renderCard6(t: ThemeConfig): React.ReactNode {
   return (
     <div className="h-full flex flex-col relative z-10 p-7">
-      <CardIdentity t={t} />
+      <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="most" line2="liked" t={t} />
       <p
         className="text-[12px] font-medium uppercase tracking-widest mb-6"
@@ -486,9 +566,19 @@ function renderCard6(t: ThemeConfig): React.ReactNode {
         {MOCK_DATA.topVideosByLikes.map((v, i) => (
           <div key={i} className="flex items-center gap-3 relative">
             <div
-              className="w-14 h-14 rounded-xl flex-shrink-0"
-              style={{ background: t.statBg, border: `1px solid ${t.statBorder}` }}
-            />
+              className="flex-shrink-0 flex items-center justify-center relative overflow-hidden"
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 12,
+                background: 'rgba(255,107,107,0.08)',
+                border: '1px solid rgba(255,107,107,0.15)',
+              }}
+            >
+              <svg width="12" height="14" viewBox="0 0 12 14" fill="none">
+                <path d="M1.5 1.5L10.5 7L1.5 12.5V1.5Z" fill="#FF6B6B" fillOpacity="0.7" />
+              </svg>
+            </div>
             <div className="flex-1 min-w-0 pr-10">
               <p
                 className="text-[14px] font-bold truncate tracking-tight"
@@ -518,7 +608,7 @@ function renderCard7(t: ThemeConfig): React.ReactNode {
   const maxP = Math.max(...MOCK_DATA.topCountries.map((c) => c.percent))
   return (
     <div className="h-full flex flex-col relative z-10 p-7">
-      <CardIdentity t={t} />
+      <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="your" line2="audience" t={t} />
       <p
         className="text-[12px] font-medium uppercase tracking-widest mb-6"
@@ -560,7 +650,7 @@ function renderCard7(t: ThemeConfig): React.ReactNode {
 function renderCard8(t: ThemeConfig): React.ReactNode {
   return (
     <div className="h-full flex flex-col relative z-10 p-7">
-      <CardIdentity t={t} />
+      <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="best" line2="days" t={t} />
       <p
         className="text-[12px] font-medium uppercase tracking-widest mb-6"
@@ -597,7 +687,7 @@ function renderCard9(t: ThemeConfig): React.ReactNode {
   const s = MOCK_DATA.audienceLoyalty
   return (
     <div className="h-full flex flex-col relative z-10 p-7">
-      <CardIdentity t={t} />
+      <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="audience" line2="loyalty" t={t} />
       <div
         className="flex-1 flex flex-col justify-center gap-4 anim-fade-up"
@@ -638,7 +728,7 @@ function renderVideoCard(video: VideoData, t: ThemeConfig): React.ReactNode {
   const line2 = words.length > 3 ? words.slice(3).join(' ') : ''
   return (
     <div className="h-full flex flex-col relative z-10 p-7">
-      <CardIdentity t={t} />
+      <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <h2 className="leading-none tracking-tighter mb-4">
         <span className="block text-[36px] font-black" style={{ color: t.text }}>
           {line1}
@@ -804,10 +894,10 @@ function ShareOverlay({
             width: 280,
             aspectRatio: '9/16',
             borderRadius: 24,
-            backgroundColor: theme.bg,
             overflow: 'hidden',
             transform: 'scale(1.02)',
-            transition: 'background-color 0.2s ease',
+            transition: 'background 0.2s ease',
+            ...cardBackground(theme),
           }}
         >
           {theme.glowColor && (
@@ -982,7 +1072,6 @@ function ChannelCards({
               style={{
                 aspectRatio: '9/16',
                 borderRadius: 24,
-                backgroundColor: theme.bg,
                 overflow: 'hidden',
                 transform:
                   idx === activeIdx && showOverlay
@@ -990,7 +1079,8 @@ function ChannelCards({
                     : idx === activeIdx && pressing
                       ? 'scale(0.97)'
                       : 'scale(1)',
-                transition: 'transform 0.2s ease, background-color 0.2s ease',
+                transition: 'transform 0.2s ease, background 0.2s ease',
+                ...cardBackground(theme),
               }}
             >
               {theme.glowColor && (
@@ -1075,10 +1165,10 @@ function VideoCards({
         style={{
           aspectRatio: '9/16',
           borderRadius: 24,
-          backgroundColor: theme.bg,
           overflow: 'hidden',
           transform: showOverlay ? 'scale(1.02)' : pressing ? 'scale(0.97)' : 'scale(1)',
-          transition: 'transform 0.2s ease, background-color 0.2s ease',
+          transition: 'transform 0.2s ease, background 0.2s ease',
+          ...cardBackground(theme),
         }}
       >
         {theme.glowColor && (

@@ -23,26 +23,26 @@ export function ScreenAI() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-  fetch('/api/youtube/channel')
-    .then(res => res.json())
-    .then(async (channelData) => {
-      if (channelData.error) return
-      setChannelName(channelData.channelName)
-      try {
-        const [analyticsData, videosData] = await Promise.all([
-          fetch(`/api/youtube/analytics?channelId=${channelData.channelId}`).then(r => r.json()),
-          fetch(`/api/youtube/videos?channelId=${channelData.channelId}`).then(r => r.json()),
-        ])
-        setChannelContext({
-          channel: channelData,
-          analytics: analyticsData,
-          recentVideos: Array.isArray(videosData) ? videosData.slice(0, 5) : [],
-        })
-      } catch (err) {
-        setChannelContext({ channel: channelData })
-      }
-    })
-    .catch(err => console.error('Channel error:', err))
+    fetch('/api/youtube/channel')
+      .then(res => res.json())
+      .then(async (channelData) => {
+        if (channelData.error) return
+        setChannelName(channelData.channelName)
+        try {
+          const [analyticsData, videosData] = await Promise.all([
+            fetch(`/api/youtube/analytics?channelId=${channelData.channelId}`).then(r => r.json()),
+            fetch(`/api/youtube/videos?channelId=${channelData.channelId}`).then(r => r.json()),
+          ])
+          setChannelContext({
+            channel: channelData,
+            analytics: analyticsData,
+            recentVideos: Array.isArray(videosData) ? videosData.slice(0, 5) : [],
+          })
+        } catch (err) {
+          setChannelContext({ channel: channelData })
+        }
+      })
+      .catch(err => console.error('Failed to fetch channel context:', err))
   }, [])
 
   useEffect(() => {
@@ -59,14 +59,7 @@ export function ScreenAI() {
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-        message: text, 
-        channelContext,
-        history: messages.map(m => ({
-          role: m.role === 'user' ? 'user' : 'model',
-          parts: [{ text: m.text }]
-        }))
-      }),
+        body: JSON.stringify({ message: text, channelContext }),
       })
       const data = await response.json()
       if (data.error) throw new Error(data.error)
@@ -87,7 +80,7 @@ export function ScreenAI() {
   }
 
   return (
-    <div className="relative w-full bg-background flex flex-col overflow-hidden" style={{ height: 812 }}>
+    <div className="relative w-full bg-[#080808] flex flex-col overflow-hidden" style={{ height: 812 }}>
       <div
         className="absolute top-0 left-0 right-0 h-48 pointer-events-none"
         style={{
@@ -106,37 +99,37 @@ export function ScreenAI() {
             <span className="text-[14px] text-white font-black">✦</span>
           </div>
           <div>
-            <p className="text-[16px] font-bold text-foreground tracking-[-0.3px] leading-none">Youu AI</p>
+            <p className="text-[16px] font-bold text-white tracking-[-0.3px] leading-none">Youu AI</p>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span
                 className="w-1.5 h-1.5 rounded-full"
                 style={{ background: '#FF6B6B', boxShadow: '0 0 6px rgba(255,107,107,0.8)' }}
               />
-              <span className="text-[11px] text-muted-foreground font-medium">
+              <span className="text-[11px] text-[#606060] font-medium">
                 {channelContext ? 'Active · knows your channel' : 'Loading channel data...'}
               </span>
             </div>
           </div>
         </div>
-        <button type="button" aria-label="More options" className="w-9 h-9 rounded-full bg-surface border border-border flex items-center justify-center">
+        <button className="w-9 h-9 rounded-full bg-[#161616] border border-[#1E1E1E] flex items-center justify-center">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="2" fill="var(--muted-foreground)" />
-            <circle cx="19" cy="12" r="2" fill="var(--muted-foreground)" />
-            <circle cx="5" cy="12" r="2" fill="var(--muted-foreground)" />
+            <circle cx="12" cy="12" r="2" fill="#606060" />
+            <circle cx="19" cy="12" r="2" fill="#606060" />
+            <circle cx="5" cy="12" r="2" fill="#606060" />
           </svg>
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pb-4 relative z-10">
         <div className="flex items-center gap-3 mb-5">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-[11px] text-text-tertiary font-medium px-2">Today</span>
-          <div className="flex-1 h-px bg-border" />
+          <div className="flex-1 h-px bg-[#1E1E1E]" />
+          <span className="text-[11px] text-[#484848] font-medium px-2">Today</span>
+          <div className="flex-1 h-px bg-[#1E1E1E]" />
         </div>
 
         <div
-          className="rounded-[20px] p-4 mb-4 relative overflow-hidden anim-fade-up"
-          style={{ background: 'var(--card)', border: '1px solid var(--border)', borderLeft: '3px solid #FF6B6B' }}
+          className="rounded-[20px] p-4 mb-4 relative overflow-hidden"
+          style={{ background: '#111111', border: '1px solid #1E1E1E', borderLeft: '3px solid #FF6B6B' }}
         >
           <div className="flex items-start gap-3">
             <div
@@ -146,17 +139,17 @@ export function ScreenAI() {
               <span className="text-[11px] text-white font-black">✦</span>
             </div>
             <div>
-              <p className="text-[14px] text-foreground font-medium leading-relaxed">
+              <p className="text-[14px] text-white font-medium leading-relaxed">
                 Hey <span className="font-bold">{channelName}</span> — I know your channel inside out. Ask me anything about your growth, content strategy, or what your numbers mean.
               </p>
-              <p className="text-[11px] text-text-tertiary mt-2 font-medium">Youu AI · just now</p>
+              <p className="text-[11px] text-[#484848] mt-2 font-medium">Youu AI · just now</p>
             </div>
           </div>
         </div>
 
         {messages.length === 0 && (
-          <div className="mb-6 anim-fade-up" style={{ animationDelay: '150ms' }}>
-            <p className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider mb-3">
+          <div className="mb-6">
+            <p className="text-[11px] font-semibold text-[#484848] uppercase tracking-wider mb-3">
               Suggested questions
             </p>
             <div className="flex flex-col gap-2">
@@ -165,11 +158,11 @@ export function ScreenAI() {
                   key={prompt}
                   onClick={() => sendMessage(prompt)}
                   className="text-left px-4 py-3 rounded-full flex items-center justify-between gap-3"
-                  style={{ background: 'var(--card)', border: '1.5px solid var(--border)' }}
+                  style={{ background: '#111111', border: '1.5px solid #1E1E1E' }}
                 >
-                  <span className="text-[13px] font-medium text-text-secondary">{prompt}</span>
+                  <span className="text-[13px] font-medium text-[#888888]">{prompt}</span>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M3 7H11M11 7L7.5 3.5M11 7L7.5 10.5" stroke="var(--text-tertiary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M3 7H11M11 7L7.5 3.5M11 7L7.5 10.5" stroke="#484848" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
               ))}
@@ -178,7 +171,7 @@ export function ScreenAI() {
         )}
 
         {messages.map((msg, index) => (
-          <div key={index} className={`mb-4 flex ${msg.role === 'user' ? 'justify-end anim-slide-right' : 'justify-start anim-slide-left'}`}>
+          <div key={index} className={`mb-4 flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.role === 'ai' && (
               <div
                 className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 mr-3"
@@ -190,12 +183,12 @@ export function ScreenAI() {
             <div
               className="max-w-[80%] px-4 py-3 rounded-[18px]"
               style={{
-                background: msg.role === 'user' ? 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)' : 'var(--card)',
-                border: msg.role === 'ai' ? '1px solid var(--border)' : 'none',
+                background: msg.role === 'user' ? 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)' : '#111111',
+                border: msg.role === 'ai' ? '1px solid #1E1E1E' : 'none',
               }}
             >
-              <p className="text-[14px] font-medium leading-relaxed" style={{ color: msg.role === 'user' ? 'white' : 'var(--foreground)' }}>{msg.text}</p>
-              <p className="text-[10px] mt-1 font-medium" style={{ color: msg.role === 'user' ? 'rgba(255,255,255,0.6)' : 'var(--text-tertiary)' }}>
+              <p className="text-[14px] text-white font-medium leading-relaxed">{msg.text}</p>
+              <p className="text-[10px] mt-1 font-medium" style={{ color: msg.role === 'user' ? 'rgba(255,255,255,0.6)' : '#484848' }}>
                 {msg.role === 'ai' ? 'Youu AI' : 'You'} · {msg.time}
               </p>
             </div>
@@ -210,11 +203,11 @@ export function ScreenAI() {
             >
               <span className="text-[11px] text-white font-black">✦</span>
             </div>
-            <div className="px-4 py-3 rounded-[18px]" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <div className="px-4 py-3 rounded-[18px]" style={{ background: '#111111', border: '1px solid #1E1E1E' }}>
               <div className="flex gap-1 items-center h-5">
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '300ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#606060] animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#606060] animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#606060] animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           </div>
@@ -222,11 +215,11 @@ export function ScreenAI() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t border-border px-4 flex-shrink-0 relative z-10" style={{ paddingBottom: 32, paddingTop: 12 }}>
+      <div className="border-t border-[#1E1E1E] px-4 flex-shrink-0 relative z-10" style={{ paddingBottom: 32, paddingTop: 12 }}>
         <div className="flex items-center gap-3">
           <div
             className="flex-1 flex items-center gap-3 px-4 h-[50px] rounded-full"
-            style={{ background: 'var(--muted)', border: '1.5px solid var(--border)' }}
+            style={{ background: '#161616', border: '1.5px solid #1E1E1E' }}
           >
             <input
               type="text"
@@ -234,23 +227,21 @@ export function ScreenAI() {
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendMessage(inputValue)}
               placeholder="Ask anything about your channel..."
-              className="flex-1 bg-transparent text-[14px] text-foreground placeholder:text-text-tertiary outline-none font-medium"
+              className="flex-1 bg-transparent text-[14px] text-white placeholder:text-[#484848] outline-none font-medium"
             />
           </div>
           <button
-            type="button"
-            aria-label="Send message"
             onClick={() => sendMessage(inputValue)}
             disabled={!inputValue.trim() || isLoading}
             className="w-[50px] h-[50px] rounded-full flex items-center justify-center flex-shrink-0"
             style={{
-              background: inputValue.trim() ? 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)' : 'var(--muted)',
-              border: inputValue.trim() ? 'none' : '1.5px solid var(--border)',
+              background: inputValue.trim() ? 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)' : '#161616',
+              border: inputValue.trim() ? 'none' : '1.5px solid #1E1E1E',
               transition: 'all 0.2s ease',
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" stroke={inputValue.trim() ? 'white' : 'var(--text-tertiary)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M22 2L11 13M22 2L15 22L11 13M11 13L2 9L22 2" stroke={inputValue.trim() ? 'white' : '#484848'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
         </div>

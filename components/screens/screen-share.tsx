@@ -1,10 +1,12 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Download, Share2, X } from 'lucide-react'
-import { toPng } from 'html-to-image'
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Download, Share2, X } from 'lucide-react';
+import { toPng } from 'html-to-image';
+import { FastAverageColor } from 'fast-average-color';
 
 // ─── Types ──────────────────────────────────────────────
+// MUST come first — everything below depends on these
 
 interface VideoData {
   id: string
@@ -128,18 +130,18 @@ const MOCK_DATA = {
     date: 'Jan 8, 2026',
   },
   topVideosByViews: [
-    { title: 'I tried building a mechanical keyboard from scratch', views: '45.2K' },
-    { title: 'Desk Setup Tour 2026 (Minimalist)', views: '38.1K' },
-    { title: 'Why I stopped using notion.', views: '22.9K' },
-    { title: 'My favorite VS Code extensions', views: '11.4K' },
-    { title: 'Day in the life of a designer', views: '6.9K' },
+    { title: 'I tried building a mechanical keyboard from scratch', views: '45.2K', thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg' },
+    { title: 'Desk Setup Tour 2026 (Minimalist)', views: '38.1K', thumbnail: 'https://i.ytimg.com/vi/2GmLe_7gC6k/hqdefault.jpg' },
+    { title: 'Why I stopped using notion.', views: '22.9K', thumbnail: 'https://i.ytimg.com/vi/3MqJkCq9XpU/hqdefault.jpg' },
+    { title: 'My favorite VS Code extensions', views: '11.4K', thumbnail: 'https://i.ytimg.com/vi/4KtXJpRzL4I/hqdefault.jpg' },
+    { title: 'Day in the life of a designer', views: '6.9K', thumbnail: 'https://i.ytimg.com/vi/5sVk6RwHjCg/hqdefault.jpg' },
   ],
   topVideosByLikes: [
-    { title: 'I tried building a mechanical keyboard from scratch', likes: '12.4K' },
-    { title: 'Desk Setup Tour 2026 (Minimalist)', likes: '9.8K' },
-    { title: 'Day in the life of a designer', likes: '7.1K' },
-    { title: 'Why I stopped using notion.', likes: '5.6K' },
-    { title: 'My favorite VS Code extensions', likes: '3.2K' },
+    { title: 'I tried building a mechanical keyboard from scratch', likes: '12.4K', thumbnail: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg' },
+    { title: 'Desk Setup Tour 2026 (Minimalist)', likes: '9.8K', thumbnail: 'https://i.ytimg.com/vi/2GmLe_7gC6k/hqdefault.jpg' },
+    { title: 'Day in the life of a designer', likes: '7.1K', thumbnail: 'https://i.ytimg.com/vi/5sVk6RwHjCg/hqdefault.jpg' },
+    { title: 'Why I stopped using notion.', likes: '5.6K', thumbnail: 'https://i.ytimg.com/vi/3MqJkCq9XpU/hqdefault.jpg' },
+    { title: 'My favorite VS Code extensions', likes: '3.2K', thumbnail: 'https://i.ytimg.com/vi/4KtXJpRzL4I/hqdefault.jpg' },
   ],
   topCountries: [
     { flag: '🇺🇸', name: 'United States', percent: 38 },
@@ -328,34 +330,279 @@ function StatPill({
   )
 }
 
-// ─── Channel Card Renderers ─────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// FIX 1: useThumbnailColor now routes through /api/thumbnail-proxy
+// This bypasses YouTube's CORS block on canvas reads.
+// Create this route: app/api/thumbnail-proxy/route.ts (see comment below)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// app/api/thumbnail-proxy/route.ts:
+//
+//   import { NextRequest } from 'next/server'
+//   export async function GET(req: NextRequest) {
+//     const url = req.nextUrl.searchParams.get('url')
+//     if (!url) return new Response('Missing url', { status: 400 })
+//     const res = await fetch(url)
+//     const buf = await res.arrayBuffer()
+//     return new Response(buf, {
+//       headers: {
+//         'Content-Type': res.headers.get('content-type') ?? 'image/jpeg',
+//         'Cache-Control': 'public, max-age=86400',
+//       },
+//     })
+//   }
+//
+// ─────────────────────────────────────────────────────────────────────────────
 
-function renderCard1(t: ThemeConfig): React.ReactNode {
+const useThumbnailColor = (url: string | undefined) => {
+  const [color, setColor] = useState<string>('#1A0F0A')
+
+  useEffect(() => {
+    if (!url) return
+    let cancelled = false
+
+    // Route through our proxy so canvas can read cross-origin thumbnails
+    const proxied = `/api/thumbnail-proxy?url=${encodeURIComponent(url)}`
+
+    const fac = new FastAverageColor()
+    fac.getColorAsync(proxied)
+      .then(result => {
+        if (!cancelled) setColor(result.hex)
+      })
+      .catch(() => {
+        if (!cancelled) setColor('#1A0F0A') // safe dark fallback
+      })
+
+    return () => { cancelled = true }
+  }, [url])
+
+  return color
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FIX 2: Card1Content moved to AFTER all types, constants, and helpers
+// FIX 3: Avatar only — no channel name displayed on card 1
+// ─────────────────────────────────────────────────────────────────────────────
+
+const Card1Content: React.FC<{ theme: ThemeConfig }> = ({ theme }) => {
   const { current, nextMilestone } = MOCK_DATA.subscribers
-  const away = nextMilestone - current
+  const { thisWeek, lastWeek } = MOCK_DATA.subscriberGrowth
+  const growthPct = lastWeek > 0
+    ? Math.round(((thisWeek - lastWeek) / lastWeek) * 100)
+    : 0
+  const pct = Math.round((current / nextMilestone) * 100)
+
+  const v1 = MOCK_DATA.topVideosByViews[0]
+  const v2 = MOCK_DATA.topVideosByViews[1]
+  const v3 = MOCK_DATA.topVideosByViews[2]
+
+  // Proxied URLs for colour extraction
+  const proxy = (url: string) => url ? `/api/thumbnail-proxy?url=${encodeURIComponent(url)}` : ''
+  const color1 = useThumbnailColor(v1.thumbnail)
+  const color2 = useThumbnailColor(v2.thumbnail)
+  const color3 = useThumbnailColor(v3.thumbnail)
+
+  const backgroundGradient = `linear-gradient(135deg, ${color1}22, ${color2}18, ${color3}14), linear-gradient(160deg, #1A0F0A 0%, #0E0908 55%, #080808 100%)`
+
+  const ThumbnailBox = ({
+    rank,
+    video,
+    size,
+  }: {
+    rank: number
+    video: typeof v1
+    size: 'lg' | 'sm'
+  }) => {
+    const w = size === 'lg' ? 104 : 82
+    const h = size === 'lg' ? 130 : 104
+    const r = size === 'lg' ? 20 : 16
+    const badgeSize = size === 'lg' ? 26 : 22
+    const badgeFontSize = size === 'lg' ? 13 : 11
+    const isFirst = rank === 1
+    const [imgError, setImgError] = useState(false)
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+        <div style={{
+          width: w, height: h, borderRadius: r, overflow: 'hidden',
+          background: '#161616',
+          border: isFirst ? `2.5px solid ${theme.accent}` : '2px solid rgba(255,255,255,0.10)',
+          position: 'relative',
+          boxShadow: isFirst ? `0 8px 28px rgba(255,107,107,0.28)` : 'none',
+        }}>
+          {video.thumbnail && !imgError ? (
+            <img
+              src={proxy(video.thumbnail)}
+              alt="thumbnail"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div style={{
+              width: '100%', height: '100%',
+              background: isFirst
+                ? 'linear-gradient(145deg, #2A1212 0%, #111 100%)'
+                : 'linear-gradient(145deg, #1A1A1A 0%, #0D0D0D 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <svg width="16" height="18" viewBox="0 0 16 18" fill="none">
+                <path d="M2 1.5L14.5 9L2 16.5V1.5Z"
+                  fill={isFirst ? 'rgba(255,107,107,0.55)' : 'rgba(255,255,255,0.18)'}
+                />
+              </svg>
+            </div>
+          )}
+          <div style={{
+            position: 'absolute', bottom: 6, right: 6,
+            width: badgeSize, height: badgeSize, borderRadius: '50%',
+            background: isFirst ? theme.accent : '#FFFFFF',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+          }}>
+            <span style={{ fontSize: badgeFontSize, fontWeight: 900, color: '#000' }}>{rank}</span>
+          </div>
+        </div>
+        <span style={{
+          fontSize: size === 'lg' ? 13 : 11,
+          fontWeight: size === 'lg' ? 800 : 700,
+          color: isFirst ? theme.text : theme.textMuted,
+          letterSpacing: '-0.3px',
+        }}>
+          {video.views}
+        </span>
+      </div>
+    )
+  }
+
   return (
-    <div className="h-full flex flex-col relative z-10 p-7">
-      <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
-      <CardTitle line1="your" line2="subscribers" t={t} />
-      <div className="flex-1 flex flex-col justify-center">
-        <p
-          className="text-[72px] font-black tracking-tighter leading-none mb-3"
-          style={{ color: t.text }}
-        >
+    <div
+      className="h-full flex flex-col relative z-10 p-6"
+      style={{ background: backgroundGradient }}
+    >
+      {/* Decorative radial glow */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+        background: `radial-gradient(circle at 70% 30%, ${theme.accent}12, transparent 80%)`,
+        pointerEvents: 'none',
+      }} />
+
+      {/* FIX 3: Avatar only — no name beneath it */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+        {MOCK_DATA.channelAvatar ? (
+          <img
+            src={MOCK_DATA.channelAvatar}
+            alt=""
+            style={{
+              width: 52, height: 52, borderRadius: '50%', objectFit: 'cover',
+              border: `2.5px solid ${theme.accent}`, display: 'block',
+            }}
+          />
+        ) : (
+          <div style={{
+            width: 52, height: 52, borderRadius: '50%',
+            background: `linear-gradient(135deg, ${theme.accent} 0%, #FF2D55 100%)`,
+            border: `2.5px solid ${theme.accent}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{ fontSize: 20, fontWeight: 900, color: theme.isDark ? '#000' : '#fff' }}>
+              {MOCK_DATA.channelName[0]}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Top 3 podium */}
+      <div style={{ marginBottom: 20 }}>
+        <p style={{
+          fontSize: 10, fontWeight: 700, color: theme.textMuted,
+          letterSpacing: '0.14em', marginBottom: 12, textTransform: 'uppercase',
+          textAlign: 'center',
+        }}>
+          Top Videos This Week
+        </p>
+        <div style={{
+          display: 'flex', alignItems: 'flex-end',
+          justifyContent: 'center', gap: 12,
+        }}>
+          <ThumbnailBox rank={2} video={v2} size="sm" />
+          <ThumbnailBox rank={1} video={v1} size="lg" />
+          <ThumbnailBox rank={3} video={v3} size="sm" />
+        </div>
+      </div>
+
+      {/* Three weekly stat pills */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 22 }}>
+        {[
+          { label: 'New Subs', value: `+${thisWeek}`, color: theme.text },
+          { label: 'Total Views', value: MOCK_DATA.totalViews, color: theme.text },
+          {
+            label: 'Growth',
+            value: `${growthPct >= 0 ? '+' : ''}${growthPct}%`,
+            color: growthPct >= 0 ? '#4ADE80' : theme.accent,
+          },
+        ].map((s) => (
+          <div key={s.label} style={{
+            flex: 1, padding: '10px 6px', borderRadius: 16,
+            textAlign: 'center',
+            background: 'rgba(255,255,255,0.05)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255,255,255,0.09)',
+          }}>
+            <p style={{
+              fontSize: 9, fontWeight: 700, color: theme.textMuted,
+              textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 5,
+            }}>
+              {s.label}
+            </p>
+            <p style={{
+              fontSize: 18, fontWeight: 900,
+              color: s.color, letterSpacing: '-0.5px', lineHeight: 1,
+            }}>
+              {s.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Total subscribers hero */}
+      <div style={{
+        textAlign: 'center', flex: 1,
+        display: 'flex', flexDirection: 'column', justifyContent: 'center',
+      }}>
+        <p style={{
+          fontSize: 10, fontWeight: 700, color: theme.textMuted,
+          textTransform: 'uppercase', letterSpacing: '0.14em', marginBottom: 8,
+        }}>
+          Total Subscribers
+        </p>
+        <p style={{
+          fontSize: 68, fontWeight: 900, color: theme.text,
+          letterSpacing: '-4px', lineHeight: 1, marginBottom: 14,
+          textShadow: `0 2px 20px ${theme.accent}28`,
+        }}>
           {current.toLocaleString()}
         </p>
-        <p className="text-[18px] font-bold tracking-tight leading-snug" style={{ color: t.accent }}>
-          {away} away from {nextMilestone.toLocaleString()} 🎉
+        <div style={{
+          height: 3, borderRadius: 100,
+          background: 'rgba(255,255,255,0.10)', overflow: 'hidden', marginBottom: 7,
+        }}>
+          <div style={{
+            width: `${pct}%`, height: '100%', borderRadius: 100,
+            background: `linear-gradient(90deg, ${theme.accent}, #FF2D55)`,
+          }} />
+        </div>
+        <p style={{ fontSize: 11, fontWeight: 600, color: theme.textMuted }}>
+          {nextMilestone - current} to {nextMilestone.toLocaleString()}
         </p>
       </div>
-      <div className="flex gap-3 anim-fade-up" style={{ animationDelay: '160ms' }}>
-        <StatPill label="Total Views" value={MOCK_DATA.totalViews} t={t} />
-        <StatPill label="Videos" value={String(MOCK_DATA.totalVideos)} t={t} />
-      </div>
-      <CardFooter t={t} />
+
+      <CardFooter t={theme} />
     </div>
   )
 }
+
+// ─── Channel Card Renderers ─────────────────────────────
 
 function renderCard2(t: ThemeConfig): React.ReactNode {
   const { thisWeek, lastWeek } = MOCK_DATA.subscriberGrowth
@@ -367,30 +614,18 @@ function renderCard2(t: ThemeConfig): React.ReactNode {
       <CardTitle line1="subscriber" line2="growth" t={t} />
       <div className="flex-1 flex flex-col justify-center gap-6">
         <div>
-          <p
-            className="text-[11px] font-bold uppercase tracking-wider mb-1"
-            style={{ color: t.textMuted }}
-          >
+          <p className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: t.textMuted }}>
             This Week
           </p>
-          <p
-            className="text-[56px] font-black tracking-tighter leading-none"
-            style={{ color: t.text }}
-          >
+          <p className="text-[56px] font-black tracking-tighter leading-none" style={{ color: t.text }}>
             +{thisWeek}
           </p>
         </div>
         <div>
-          <p
-            className="text-[11px] font-bold uppercase tracking-wider mb-1"
-            style={{ color: t.textMuted }}
-          >
+          <p className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: t.textMuted }}>
             Last Week
           </p>
-          <p
-            className="text-[40px] font-black tracking-tighter leading-none"
-            style={{ color: t.textMuted }}
-          >
+          <p className="text-[40px] font-black tracking-tighter leading-none" style={{ color: t.textMuted }}>
             +{lastWeek}
           </p>
         </div>
@@ -411,25 +646,18 @@ function renderCard2(t: ThemeConfig): React.ReactNode {
 function renderCard3(t: ThemeConfig): React.ReactNode {
   const hrs = MOCK_DATA.watchTimeHours
   const days = (hrs / 24).toFixed(1)
-  const avgPerVideo =
-    MOCK_DATA.totalVideos > 0
-      ? Math.round(MOCK_DATA.totalMinutes / MOCK_DATA.totalVideos)
-      : 0
+  const avgPerVideo = MOCK_DATA.totalVideos > 0
+    ? Math.round(MOCK_DATA.totalMinutes / MOCK_DATA.totalVideos)
+    : 0
   return (
     <div className="h-full flex flex-col relative z-10 p-7">
       <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="watch" line2="time" t={t} />
       <div className="flex-1 flex flex-col justify-center">
-        <p
-          className="text-[64px] font-black tracking-tighter leading-none mb-4"
-          style={{ color: t.text }}
-        >
+        <p className="text-[64px] font-black tracking-tighter leading-none mb-4" style={{ color: t.text }}>
           {hrs}h
         </p>
-        <p
-          className="text-[17px] font-bold leading-relaxed tracking-tight"
-          style={{ color: t.textMuted }}
-        >
+        <p className="text-[17px] font-bold leading-relaxed tracking-tight" style={{ color: t.textMuted }}>
           Your audience spent {hrs} hours watching you — that&apos;s {days} days of content.
         </p>
       </div>
@@ -453,16 +681,11 @@ function renderCard4(t: ThemeConfig): React.ReactNode {
           className="w-full aspect-video rounded-2xl flex items-center justify-center relative overflow-hidden"
           style={{ background: '#0D0D0D', border: '1px solid rgba(255,107,107,0.15)' }}
         >
-          <div
-            className="absolute inset-0"
-            style={{ background: 'rgba(255,107,107,0.08)' }}
-          />
+          <div className="absolute inset-0" style={{ background: 'rgba(255,107,107,0.08)' }} />
           <div
             className="relative z-10 flex items-center justify-center"
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
+              width: 40, height: 40, borderRadius: '50%',
               background: 'rgba(255,107,107,0.25)',
               border: '1px solid rgba(255,107,107,0.4)',
             }}
@@ -473,24 +696,14 @@ function renderCard4(t: ThemeConfig): React.ReactNode {
           </div>
         </div>
         <div>
-          <p
-            className="text-[17px] font-black tracking-tight leading-snug mb-2 line-clamp-2"
-            style={{ color: t.text }}
-          >
+          <p className="text-[17px] font-black tracking-tight leading-snug mb-2 line-clamp-2" style={{ color: t.text }}>
             {v.title}
           </p>
-          <p className="text-[13px] font-medium" style={{ color: t.textMuted }}>
-            {v.date}
-          </p>
+          <p className="text-[13px] font-medium" style={{ color: t.textMuted }}>{v.date}</p>
         </div>
-        <p
-          className="text-[48px] font-black tracking-tighter leading-none"
-          style={{ color: t.text }}
-        >
+        <p className="text-[48px] font-black tracking-tighter leading-none" style={{ color: t.text }}>
           {v.views}
-          <span className="text-[16px] font-medium ml-2" style={{ color: t.textMuted }}>
-            views
-          </span>
+          <span className="text-[16px] font-medium ml-2" style={{ color: t.textMuted }}>views</span>
         </p>
       </div>
       <CardFooter t={t} />
@@ -503,10 +716,7 @@ function renderCard5(t: ThemeConfig): React.ReactNode {
     <div className="h-full flex flex-col relative z-10 p-7">
       <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="top" line2="videos" t={t} />
-      <p
-        className="text-[12px] font-medium uppercase tracking-widest mb-6"
-        style={{ color: t.textMuted }}
-      >
+      <p className="text-[12px] font-medium uppercase tracking-widest mb-6" style={{ color: t.textMuted }}>
         This Week · By Views
       </p>
       <div className="flex-1 flex flex-col justify-center gap-4">
@@ -515,9 +725,7 @@ function renderCard5(t: ThemeConfig): React.ReactNode {
             <div
               className="flex-shrink-0 flex items-center justify-center relative overflow-hidden"
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: 12,
+                width: 56, height: 56, borderRadius: 12,
                 background: 'rgba(255,107,107,0.08)',
                 border: '1px solid rgba(255,107,107,0.15)',
               }}
@@ -527,15 +735,10 @@ function renderCard5(t: ThemeConfig): React.ReactNode {
               </svg>
             </div>
             <div className="flex-1 min-w-0 pr-10">
-              <p
-                className="text-[14px] font-bold truncate tracking-tight"
-                style={{ color: t.text }}
-              >
+              <p className="text-[14px] font-bold truncate tracking-tight" style={{ color: t.text }}>
                 {v.title}
               </p>
-              <p className="text-[12px] font-medium" style={{ color: t.textMuted }}>
-                {v.views} views
-              </p>
+              <p className="text-[12px] font-medium" style={{ color: t.textMuted }}>{v.views} views</p>
             </div>
             <span
               className="absolute right-0 text-[80px] font-black leading-none select-none"
@@ -556,10 +759,7 @@ function renderCard6(t: ThemeConfig): React.ReactNode {
     <div className="h-full flex flex-col relative z-10 p-7">
       <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="most" line2="liked" t={t} />
-      <p
-        className="text-[12px] font-medium uppercase tracking-widest mb-6"
-        style={{ color: t.textMuted }}
-      >
+      <p className="text-[12px] font-medium uppercase tracking-widest mb-6" style={{ color: t.textMuted }}>
         By Likes
       </p>
       <div className="flex-1 flex flex-col justify-center gap-4">
@@ -568,9 +768,7 @@ function renderCard6(t: ThemeConfig): React.ReactNode {
             <div
               className="flex-shrink-0 flex items-center justify-center relative overflow-hidden"
               style={{
-                width: 56,
-                height: 56,
-                borderRadius: 12,
+                width: 56, height: 56, borderRadius: 12,
                 background: 'rgba(255,107,107,0.08)',
                 border: '1px solid rgba(255,107,107,0.15)',
               }}
@@ -580,15 +778,10 @@ function renderCard6(t: ThemeConfig): React.ReactNode {
               </svg>
             </div>
             <div className="flex-1 min-w-0 pr-10">
-              <p
-                className="text-[14px] font-bold truncate tracking-tight"
-                style={{ color: t.text }}
-              >
+              <p className="text-[14px] font-bold truncate tracking-tight" style={{ color: t.text }}>
                 {v.title}
               </p>
-              <p className="text-[12px] font-medium" style={{ color: t.textMuted }}>
-                ♥ {v.likes}
-              </p>
+              <p className="text-[12px] font-medium" style={{ color: t.textMuted }}>♥ {v.likes}</p>
             </div>
             <span
               className="absolute right-0 text-[80px] font-black leading-none select-none"
@@ -610,10 +803,7 @@ function renderCard7(t: ThemeConfig): React.ReactNode {
     <div className="h-full flex flex-col relative z-10 p-7">
       <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="your" line2="audience" t={t} />
-      <p
-        className="text-[12px] font-medium uppercase tracking-widest mb-6"
-        style={{ color: t.textMuted }}
-      >
+      <p className="text-[12px] font-medium uppercase tracking-widest mb-6" style={{ color: t.textMuted }}>
         Top Countries
       </p>
       <div className="flex-1 flex flex-col justify-center gap-4">
@@ -626,14 +816,9 @@ function renderCard7(t: ThemeConfig): React.ReactNode {
                   {c.name}
                 </span>
               </div>
-              <span className="text-[14px] font-bold" style={{ color: t.textMuted }}>
-                {c.percent}%
-              </span>
+              <span className="text-[14px] font-bold" style={{ color: t.textMuted }}>{c.percent}%</span>
             </div>
-            <div
-              className="w-full h-1.5 rounded-full overflow-hidden"
-              style={{ background: t.statBg }}
-            >
+            <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: t.statBg }}>
               <div
                 className="h-full rounded-full"
                 style={{ width: `${(c.percent / maxP) * 100}%`, background: t.accent }}
@@ -652,29 +837,21 @@ function renderCard8(t: ThemeConfig): React.ReactNode {
     <div className="h-full flex flex-col relative z-10 p-7">
       <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="best" line2="days" t={t} />
-      <p
-        className="text-[12px] font-medium uppercase tracking-widest mb-6"
-        style={{ color: t.textMuted }}
-      >
+      <p className="text-[12px] font-medium uppercase tracking-widest mb-6" style={{ color: t.textMuted }}>
         All Time
       </p>
       <div className="flex-1 flex flex-col justify-center gap-5">
         {MOCK_DATA.bestDays.map((d, i) => (
           <div key={i} className="flex items-center justify-between relative">
             <div className="flex items-center gap-3">
-              <span
-                className="text-[14px] font-bold w-5 text-right"
-                style={{ color: t.textMuted }}
-              >
+              <span className="text-[14px] font-bold w-5 text-right" style={{ color: t.textMuted }}>
                 {i + 1}
               </span>
               <span className="text-[16px] font-bold tracking-tight" style={{ color: t.text }}>
                 {d.date}
               </span>
             </div>
-            <span className="text-[15px] font-bold" style={{ color: t.accent }}>
-              {d.views} views
-            </span>
+            <span className="text-[15px] font-bold" style={{ color: t.accent }}>{d.views} views</span>
           </div>
         ))}
       </div>
@@ -689,10 +866,7 @@ function renderCard9(t: ThemeConfig): React.ReactNode {
     <div className="h-full flex flex-col relative z-10 p-7">
       <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <CardTitle line1="audience" line2="loyalty" t={t} />
-      <div
-        className="flex-1 flex flex-col justify-center gap-4 anim-fade-up"
-        style={{ animationDelay: '160ms' }}
-      >
+      <div className="flex-1 flex flex-col justify-center gap-4 anim-fade-up" style={{ animationDelay: '160ms' }}>
         <StatPill label="Avg View Duration" value={s.avd} t={t} />
         <div className="flex gap-3">
           <StatPill label="CTR" value={s.ctr} t={t} />
@@ -707,7 +881,7 @@ function renderCard9(t: ThemeConfig): React.ReactNode {
 // ─── Card Render List ───────────────────────────────────
 
 const CARD_RENDERERS = [
-  renderCard1,
+  (t: ThemeConfig) => <Card1Content theme={t} />,
   renderCard2,
   renderCard3,
   renderCard4,
@@ -721,8 +895,9 @@ const CARD_RENDERERS = [
 // ─── Video Card Renderer ────────────────────────────────
 
 function renderVideoCard(video: VideoData, t: ThemeConfig): React.ReactNode {
-  const engagement =
-    video.viewCount > 0 ? Math.round((video.likeCount / video.viewCount) * 100) : 0
+  const engagement = video.viewCount > 0
+    ? Math.round((video.likeCount / video.viewCount) * 100)
+    : 0
   const words = video.title.split(' ')
   const line1 = words.slice(0, 3).join(' ')
   const line2 = words.length > 3 ? words.slice(3).join(' ') : ''
@@ -730,30 +905,19 @@ function renderVideoCard(video: VideoData, t: ThemeConfig): React.ReactNode {
     <div className="h-full flex flex-col relative z-10 p-7">
       <CardIdentity t={t} avatarUrl={MOCK_DATA.channelAvatar} />
       <h2 className="leading-none tracking-tighter mb-4">
-        <span className="block text-[36px] font-black" style={{ color: t.text }}>
-          {line1}
-        </span>
+        <span className="block text-[36px] font-black" style={{ color: t.text }}>{line1}</span>
         {line2 && (
-          <span
-            className="block text-[24px] font-black line-clamp-2 mt-1"
-            style={{ color: t.accent }}
-          >
+          <span className="block text-[24px] font-black line-clamp-2 mt-1" style={{ color: t.accent }}>
             {line2}
           </span>
         )}
       </h2>
       <div className="flex-1 flex flex-col justify-center gap-4">
         <div>
-          <p
-            className="text-[11px] font-bold uppercase tracking-wider mb-1"
-            style={{ color: t.textMuted }}
-          >
+          <p className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: t.textMuted }}>
             Views
           </p>
-          <p
-            className="text-[64px] font-black tracking-tighter leading-none"
-            style={{ color: t.text }}
-          >
+          <p className="text-[64px] font-black tracking-tighter leading-none" style={{ color: t.text }}>
             {formatCount(video.viewCount)}
           </p>
         </div>
@@ -774,13 +938,7 @@ function renderVideoCard(video: VideoData, t: ThemeConfig): React.ReactNode {
 
 // ─── Theme Selector ─────────────────────────────────────
 
-function ThemeSelector({
-  activeIdx,
-  onSelect,
-}: {
-  activeIdx: number
-  onSelect: (idx: number) => void
-}) {
+function ThemeSelector({ activeIdx, onSelect }: { activeIdx: number; onSelect: (idx: number) => void }) {
   return (
     <div className="flex gap-3 justify-center" onClick={(e) => e.stopPropagation()}>
       {THEMES.map((theme, idx) => (
@@ -790,10 +948,9 @@ function ThemeSelector({
           className="w-7 h-7 rounded-full transition-all duration-200"
           style={{
             background: theme.swatch,
-            boxShadow:
-              idx === activeIdx
-                ? '0 0 0 2px #080808, 0 0 0 4px #FFFFFF'
-                : '0 0 0 1px rgba(255,255,255,0.2)',
+            boxShadow: idx === activeIdx
+              ? '0 0 0 2px #080808, 0 0 0 4px #FFFFFF'
+              : '0 0 0 1px rgba(255,255,255,0.2)',
           }}
           aria-label={`Theme: ${theme.id}`}
         />
@@ -805,11 +962,7 @@ function ThemeSelector({
 // ─── Share Overlay ──────────────────────────────────────
 
 function ShareOverlay({
-  renderCard,
-  theme,
-  themeIdx,
-  onThemeChange,
-  onClose,
+  renderCard, theme, themeIdx, onThemeChange, onClose,
 }: {
   renderCard: (t: ThemeConfig) => React.ReactNode
   theme: ThemeConfig
@@ -845,10 +998,7 @@ function ShareOverlay({
   const handleShare = useCallback(async () => {
     setSaving(true)
     const dataUrl = await doExport()
-    if (!dataUrl) {
-      setSaving(false)
-      return
-    }
+    if (!dataUrl) { setSaving(false); return }
     try {
       const res = await fetch(dataUrl)
       const blob = await res.blob()
@@ -870,11 +1020,7 @@ function ShareOverlay({
   return (
     <div
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
-      style={{
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        background: 'rgba(0,0,0,0.8)',
-      }}
+      style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', background: 'rgba(0,0,0,0.8)' }}
       onClick={onClose}
     >
       <button
@@ -884,53 +1030,38 @@ function ShareOverlay({
       >
         <X size={20} className="text-white" />
       </button>
-
-      {/* Card preview rendered inside overlay */}
       <div onClick={(e) => e.stopPropagation()} className="mb-6">
         <div
           ref={cardRef}
           className="relative shadow-2xl"
           style={{
-            width: 280,
-            aspectRatio: '9/16',
-            borderRadius: 24,
-            overflow: 'hidden',
-            transform: 'scale(1.02)',
-            transition: 'background 0.2s ease',
+            width: 280, aspectRatio: '9/16', borderRadius: 24, overflow: 'hidden',
+            transform: 'scale(1.02)', transition: 'background 0.2s ease',
             ...cardBackground(theme),
           }}
         >
           {theme.glowColor && (
             <div
               className="absolute top-0 left-1/2 -translate-x-1/2 w-[150%] h-[55%] pointer-events-none"
-              style={{
-                background: `radial-gradient(ellipse at top, ${theme.glowColor}, transparent 60%)`,
-              }}
+              style={{ background: `radial-gradient(ellipse at top, ${theme.glowColor}, transparent 60%)` }}
             />
           )}
           <NoiseOverlay />
           {renderCard(theme)}
         </div>
       </div>
-
-      {/* Controls */}
-      <div
-        className="flex flex-col items-center gap-5 w-full max-w-[360px] px-6 anim-fade-up"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="flex flex-col items-center gap-5 w-full max-w-[360px] px-6 anim-fade-up" onClick={(e) => e.stopPropagation()}>
         <ThemeSelector activeIdx={themeIdx} onSelect={onThemeChange} />
         <div className="flex gap-3 w-full">
           <button
-            onClick={handleSave}
-            disabled={saving}
+            onClick={handleSave} disabled={saving}
             className="flex-1 h-[52px] rounded-full bg-white text-black font-bold text-[15px] flex items-center justify-center gap-2 press-scale disabled:opacity-50"
           >
             <Download size={18} />
             {saving ? 'Saving…' : 'Save'}
           </button>
           <button
-            onClick={handleShare}
-            disabled={saving}
+            onClick={handleShare} disabled={saving}
             className="flex-1 h-[52px] rounded-full bg-white/15 text-white font-bold text-[15px] flex items-center justify-center gap-2 press-scale disabled:opacity-50 border border-white/20"
           >
             <Share2 size={18} />
@@ -944,11 +1075,7 @@ function ShareOverlay({
 
 // ─── Video Selector ─────────────────────────────────────
 
-function VideoSelector({
-  videos,
-  selectedId,
-  onSelect,
-}: {
+function VideoSelector({ videos, selectedId, onSelect }: {
   videos: VideoData[]
   selectedId: string
   onSelect: (v: VideoData) => void
@@ -963,8 +1090,7 @@ function VideoSelector({
             onClick={() => onSelect(v)}
             className="flex-shrink-0 rounded-xl overflow-hidden transition-all duration-200"
             style={{
-              width: 60,
-              height: 60,
+              width: 60, height: 60,
               border: isActive ? '2px solid #FF6B6B' : '2px solid transparent',
               opacity: isActive ? 1 : 0.5,
             }}
@@ -983,16 +1109,9 @@ function VideoSelector({
   )
 }
 
-// ─── Channel Cards (vertical scroll) ────────────────────
+// ─── Channel Cards ───────────────────────────────────────
 
-function ChannelCards({
-  theme,
-  activeIdx,
-  onActiveChange,
-  cardRefs,
-  onLongPress,
-  showOverlay,
-}: {
+function ChannelCards({ theme, activeIdx, onActiveChange, cardRefs, onLongPress, showOverlay }: {
   theme: ThemeConfig
   activeIdx: number
   onActiveChange: (idx: number) => void
@@ -1025,26 +1144,18 @@ function ChannelCards({
 
   const clearTimer = useCallback(() => {
     setPressing(false)
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current)
-      longPressTimer.current = null
-    }
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null }
   }, [])
 
   const handlePointerDown = useCallback(() => {
     setPressing(true)
-    longPressTimer.current = setTimeout(() => {
-      setPressing(false)
-      onLongPress()
-    }, 500)
+    longPressTimer.current = setTimeout(() => { setPressing(false); onLongPress() }, 500)
   }, [onLongPress])
 
-  // Progress bar calculation
   const trackH = 96
   const thumbH = trackH / CHANNEL_CARD_COUNT
   const maxTop = trackH - thumbH
-  const topPx =
-    CHANNEL_CARD_COUNT > 1 ? (activeIdx / (CHANNEL_CARD_COUNT - 1)) * maxTop : 0
+  const topPx = CHANNEL_CARD_COUNT > 1 ? (activeIdx / (CHANNEL_CARD_COUNT - 1)) * maxTop : 0
 
   return (
     <div className="relative flex-1 min-h-0">
@@ -1065,20 +1176,12 @@ function ChannelCards({
             style={{ height: '100%', scrollSnapAlign: 'start', flexShrink: 0 }}
           >
             <div
-              ref={(el) => {
-                cardRefs.current[idx] = el
-              }}
+              ref={(el) => { cardRefs.current[idx] = el }}
               className="relative w-full max-w-[320px] shadow-2xl"
               style={{
-                aspectRatio: '9/16',
-                borderRadius: 24,
-                overflow: 'hidden',
-                transform:
-                  idx === activeIdx && showOverlay
-                    ? 'scale(1.02)'
-                    : idx === activeIdx && pressing
-                      ? 'scale(0.97)'
-                      : 'scale(1)',
+                aspectRatio: '9/16', borderRadius: 24, overflow: 'hidden',
+                transform: idx === activeIdx && showOverlay ? 'scale(1.02)'
+                  : idx === activeIdx && pressing ? 'scale(0.97)' : 'scale(1)',
                 transition: 'transform 0.2s ease, background 0.2s ease',
                 ...cardBackground(theme),
               }}
@@ -1086,9 +1189,7 @@ function ChannelCards({
               {theme.glowColor && (
                 <div
                   className="absolute top-0 left-1/2 -translate-x-1/2 w-[150%] h-[55%] pointer-events-none"
-                  style={{
-                    background: `radial-gradient(ellipse at top, ${theme.glowColor}, transparent 60%)`,
-                  }}
+                  style={{ background: `radial-gradient(ellipse at top, ${theme.glowColor}, transparent 60%)` }}
                 />
               )}
               <NoiseOverlay />
@@ -1097,34 +1198,22 @@ function ChannelCards({
           </div>
         ))}
       </div>
-
-      {/* Vertical progress indicator */}
       <div
         className="absolute right-1.5 top-1/2 -translate-y-1/2 w-[3px] rounded-full pointer-events-none"
         style={{ height: trackH, background: 'rgba(255,255,255,0.08)' }}
       >
         <div
           className="w-full rounded-full absolute transition-all duration-300"
-          style={{
-            height: thumbH,
-            top: topPx,
-            background: theme.accent,
-          }}
+          style={{ height: thumbH, top: topPx, background: theme.accent }}
         />
       </div>
     </div>
   )
 }
 
-// ─── Video Cards ────────────────────────────────────────
+// ─── Video Cards ─────────────────────────────────────────
 
-function VideoCards({
-  selectedVideo,
-  theme,
-  cardRef,
-  onLongPress,
-  showOverlay,
-}: {
+function VideoCards({ selectedVideo, theme, cardRef, onLongPress, showOverlay }: {
   selectedVideo: VideoData
   theme: ThemeConfig
   cardRef: React.RefObject<HTMLDivElement | null>
@@ -1136,18 +1225,12 @@ function VideoCards({
 
   const clearTimer = useCallback(() => {
     setPressing(false)
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current)
-      longPressTimer.current = null
-    }
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null }
   }, [])
 
   const handlePointerDown = useCallback(() => {
     setPressing(true)
-    longPressTimer.current = setTimeout(() => {
-      setPressing(false)
-      onLongPress()
-    }, 500)
+    longPressTimer.current = setTimeout(() => { setPressing(false); onLongPress() }, 500)
   }, [onLongPress])
 
   return (
@@ -1163,9 +1246,7 @@ function VideoCards({
         ref={cardRef}
         className="relative w-full max-w-[320px] shadow-2xl"
         style={{
-          aspectRatio: '9/16',
-          borderRadius: 24,
-          overflow: 'hidden',
+          aspectRatio: '9/16', borderRadius: 24, overflow: 'hidden',
           transform: showOverlay ? 'scale(1.02)' : pressing ? 'scale(0.97)' : 'scale(1)',
           transition: 'transform 0.2s ease, background 0.2s ease',
           ...cardBackground(theme),
@@ -1174,9 +1255,7 @@ function VideoCards({
         {theme.glowColor && (
           <div
             className="absolute top-0 left-1/2 -translate-x-1/2 w-[150%] h-[55%] pointer-events-none"
-            style={{
-              background: `radial-gradient(ellipse at top, ${theme.glowColor}, transparent 60%)`,
-            }}
+            style={{ background: `radial-gradient(ellipse at top, ${theme.glowColor}, transparent 60%)` }}
           />
         )}
         <NoiseOverlay />
@@ -1186,7 +1265,7 @@ function VideoCards({
   )
 }
 
-// ─── Main Component ─────────────────────────────────────
+// ─── Main Component ──────────────────────────────────────
 
 export function ScreenShare() {
   const [tab, setTab] = useState<Tab>('channel')
@@ -1194,27 +1273,21 @@ export function ScreenShare() {
   const [channelIdx, setChannelIdx] = useState(0)
   const [showOverlay, setShowOverlay] = useState(false)
 
-  // Video state
   const [videos, setVideos] = useState<VideoData[]>([])
   const [videosLoading, setVideosLoading] = useState(false)
   const [videosError, setVideosError] = useState(false)
   const [selectedVideo, setSelectedVideo] = useState<VideoData | null>(null)
 
-  // Refs
   const channelCardRefs = useRef<(HTMLDivElement | null)[]>([])
   const videoCardRef = useRef<HTMLDivElement>(null)
-
-  // Overlay render function ref
   const overlayRenderFn = useRef<((t: ThemeConfig) => React.ReactNode) | null>(null)
 
   const theme = THEMES[themeIdx]
 
-  // Fetch videos when switching to video tab
   useEffect(() => {
     if (tab !== 'video' || videos.length > 0 || videosLoading) return
     setVideosLoading(true)
     setVideosError(false)
-
     fetch('/api/youtube/channel', { credentials: 'include' })
       .then((r) => r.json())
       .then((ch) => {
@@ -1263,7 +1336,6 @@ export function ScreenShare() {
         ))}
       </div>
 
-      {/* Channel tab */}
       {tab === 'channel' && (
         <ChannelCards
           theme={theme}
@@ -1275,16 +1347,12 @@ export function ScreenShare() {
         />
       )}
 
-      {/* Video tab */}
       {tab === 'video' && (
         <div className="flex-1 flex flex-col min-h-0">
           {videosLoading && (
             <div className="flex gap-2.5 px-5 py-3 flex-shrink-0">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="w-[60px] h-[60px] rounded-xl bg-[#161616] animate-pulse flex-shrink-0"
-                />
+                <div key={i} className="w-[60px] h-[60px] rounded-xl bg-[#161616] animate-pulse flex-shrink-0" />
               ))}
             </div>
           )}
@@ -1294,11 +1362,7 @@ export function ScreenShare() {
             </div>
           )}
           {!videosLoading && !videosError && videos.length > 0 && selectedVideo && (
-            <VideoSelector
-              videos={videos}
-              selectedId={selectedVideo.id}
-              onSelect={setSelectedVideo}
-            />
+            <VideoSelector videos={videos} selectedId={selectedVideo.id} onSelect={setSelectedVideo} />
           )}
           {selectedVideo ? (
             <VideoCards
@@ -1320,12 +1384,10 @@ export function ScreenShare() {
         </div>
       )}
 
-      {/* Hint */}
       <p className="text-center text-[11px] text-[#404040] pb-2 flex-shrink-0">
         Long-press card to save or share
       </p>
 
-      {/* Share overlay */}
       {showOverlay && overlayRenderFn.current && (
         <ShareOverlay
           renderCard={overlayRenderFn.current}
